@@ -3,7 +3,7 @@
   "sources": {
     "protomaps": {
       "type": "vector",
-      "url": "pmtiles://./basemap.pmtiles",
+      "url": "pmtiles://basemap.pmtiles",
       "attribution": "<a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap</a>"
     }
   },

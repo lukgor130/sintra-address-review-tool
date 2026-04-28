@@ -14,9 +14,19 @@ const aoiGeojson = await fetch(new URL(manifest.data.aoi, manifestUrl)).then((re
 const style = await fetch(new URL(manifest.style.file, manifestUrl)).then((response) =>
   response.json(),
 );
+const basemapUrl = new URL(manifest.basemap.file, manifestUrl);
+const basemapKey = basemapUrl.pathname.split("/").pop() ?? "basemap.pmtiles";
+const basemapFile = new File(
+  [await fetch(basemapUrl).then((response) => response.arrayBuffer())],
+  basemapKey,
+  {
+    type: "application/octet-stream",
+  },
+);
+
 style.glyphs = `${packBaseUrl.href}assets/fonts/{fontstack}/{range}.pbf`;
 style.sprite = new URL("assets/sprites/v4/light", packBaseUrl).href;
-style.sources.protomaps.url = `pmtiles://${new URL(manifest.basemap.file, manifestUrl).href}`;
+style.sources.protomaps.url = `pmtiles://${basemapKey}`;
 
 const STORAGE_KEY = `sintra-aoi-feedback-v2:${manifest.name}`;
 
@@ -375,6 +385,7 @@ function exportRows() {
 }
 
 const protocol = new pmtiles.Protocol();
+protocol.add(new pmtiles.PMTiles(new pmtiles.FileSource(basemapFile)));
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
 const map = new maplibregl.Map({
