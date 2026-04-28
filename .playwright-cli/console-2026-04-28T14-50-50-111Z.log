@@ -1,0 +1,4 @@
+[     232ms] [ERROR] Error: Server returned no content-length header or content-length exceeding request. Check that your storage backend supports HTTP Byte Serving.
+    at FetchSource.<anonymous> (http://127.0.0.1:8011/vendor/pmtiles.js:1:12842)
+    at Generator.next (<anonymous>)
+    at a (http://127.0.0.1:8011/vendor/pmtiles.js:1:574) @ http://127.0.0.1:8011/vendor/maplibre-gl.js:41

@@ -1,0 +1,20 @@
+[     428ms] [WARNING] Only use ES modules from ArcGIS CDN for testing: https://arcg.is/0W5P5f#core-api @ https://js.arcgis.com/4.32/@arcgis/core/kernel.js:4
+[     994ms] [INFO] Using Calcite Components 3.0.3 [Date: 2025-02-19, Revision: 0b0b89f59] @ https://js.arcgis.com/4.32/@arcgis/core/chunks/componentsUtils.js:7
+[    1277ms] [ERROR] [esri.layers.MapImageLayer] #load() Failed to load layer (title: 'Base cartografica Dez2014', id: '19db5bac216-layer-0') {error: a} @ https://js.arcgis.com/4.32/@arcgis/core/chunks/Logger.js:4
+[    1279ms] [ERROR] [esri.views.LayerViewManager] Failed to create layerview for layer title:'Base cartografica Dez2014', id:'19db5bac216-layer-0' of type 'map-image'. {layer: s, error: a} @ https://js.arcgis.com/4.32/@arcgis/core/chunks/Logger.js:4
+[  129877ms] [WARNING] Only use ES modules from ArcGIS CDN for testing: https://arcg.is/0W5P5f#core-api @ https://js.arcgis.com/4.32/@arcgis/core/kernel.js:4
+[  130121ms] [INFO] Using Calcite Components 3.0.3 [Date: 2025-02-19, Revision: 0b0b89f59] @ https://js.arcgis.com/4.32/@arcgis/core/chunks/componentsUtils.js:7
+[  130252ms] [ERROR] [esri.layers.MapImageLayer] #load() Failed to load layer (title: 'Base cartografica Dez2014', id: '19db5bcba76-layer-0') {error: a} @ https://js.arcgis.com/4.32/@arcgis/core/chunks/Logger.js:4
+[  130302ms] [ERROR] [esri.views.LayerViewManager] Failed to create layerview for layer title:'Base cartografica Dez2014', id:'19db5bcba76-layer-0' of type 'map-image'. {layer: s, error: a} @ https://js.arcgis.com/4.32/@arcgis/core/chunks/Logger.js:4
+[  131500ms] [ERROR] Access to fetch at 'https://sig.cm-sintra.pt/MuniSIG/REST/sites/ApoioInvestidor/map/mapservices/24?f=pjson' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:5173/:0
+[  131501ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://sig.cm-sintra.pt/MuniSIG/REST/sites/ApoioInvestidor/map/mapservices/24?f=pjson:0
+[  237346ms] [WARNING] Only use ES modules from ArcGIS CDN for testing: https://arcg.is/0W5P5f#core-api @ https://js.arcgis.com/4.32/@arcgis/core/kernel.js:4
+[  237389ms] [INFO] Using Calcite Components 3.0.3 [Date: 2025-02-19, Revision: 0b0b89f59] @ https://js.arcgis.com/4.32/@arcgis/core/chunks/componentsUtils.js:7
+[  237875ms] [ERROR] [esri.layers.MapImageLayer] #load() Failed to load layer (title: 'Base cartografica Dez2014', id: '19db5be5d82-layer-0') {error: a} @ https://js.arcgis.com/4.32/@arcgis/core/chunks/Logger.js:4
+[  237877ms] [ERROR] [esri.views.LayerViewManager] Failed to create layerview for layer title:'Base cartografica Dez2014', id:'19db5be5d82-layer-0' of type 'map-image'. {layer: s, error: a} @ https://js.arcgis.com/4.32/@arcgis/core/chunks/Logger.js:4
+[  312926ms] [WARNING] Only use ES modules from ArcGIS CDN for testing: https://arcg.is/0W5P5f#core-api @ https://js.arcgis.com/4.32/@arcgis/core/kernel.js:4
+[  312963ms] [INFO] Using Calcite Components 3.0.3 [Date: 2025-02-19, Revision: 0b0b89f59] @ https://js.arcgis.com/4.32/@arcgis/core/chunks/componentsUtils.js:7
+[  348944ms] [WARNING] Only use ES modules from ArcGIS CDN for testing: https://arcg.is/0W5P5f#core-api @ https://js.arcgis.com/4.32/@arcgis/core/kernel.js:4
+[  348975ms] [INFO] Using Calcite Components 3.0.3 [Date: 2025-02-19, Revision: 0b0b89f59] @ https://js.arcgis.com/4.32/@arcgis/core/chunks/componentsUtils.js:7
+[85849715ms] [WARNING] Only use ES modules from ArcGIS CDN for testing: https://arcg.is/0W5P5f#core-api @ https://js.arcgis.com/4.32/@arcgis/core/kernel.js:4
+[85849811ms] [INFO] Using Calcite Components 3.0.3 [Date: 2025-02-19, Revision: 0b0b89f59] @ https://js.arcgis.com/4.32/@arcgis/core/chunks/componentsUtils.js:7

@@ -1,0 +1,37 @@
+{
+  "name": "Azenhas do Mar",
+  "generatedAt": "2026-04-28T14:47:07Z",
+  "format": "sintra-aoi-pack-v1",
+  "basemap": {
+    "type": "pmtiles",
+    "file": "./basemap.pmtiles",
+    "buildKey": "20260428.pmtiles",
+    "version": "4.14.5",
+    "maxzoom": 15
+  },
+  "style": {
+    "file": "./style.json",
+    "glyphs": "./assets/fonts/{fontstack}/{range}.pbf",
+    "sprite": "./assets/sprites/v4/light",
+    "styleVersion": "5.7.2"
+  },
+  "data": {
+    "aoi": "./aoi.geojson",
+    "parcels": "./parcels.geojson"
+  },
+  "view": {
+    "bbox": [
+      -9.4659115,
+      38.832155,
+      -9.4526391,
+      38.8444229
+    ],
+    "center": [
+      -9.4592753,
+      38.8382889
+    ],
+    "zoom": 14
+  },
+  "parcelCount": 65,
+  "attribution": "OpenStreetMap contributors via Protomaps basemap extract."
+}

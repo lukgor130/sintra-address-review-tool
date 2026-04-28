@@ -1,0 +1,44 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Training review
+      - heading "Turn map judgement into model data" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Review each parcel, correct the tier labels, and export a clean dataset for the next address-selection algorithm.
+    - region "Review progress" [ref=e8]
+    - generic [ref=e9]:
+      - heading "Loading parcel" [level=2] [ref=e11]
+      - generic [ref=e14]:
+        - generic [ref=e15]: Actual best address
+        - combobox "Actual best address" [ref=e16] [cursor=pointer]
+      - generic [ref=e17]:
+        - generic [ref=e18]: Parcel-level decision
+        - generic [ref=e19]:
+          - button "Gold is right" [ref=e20] [cursor=pointer]
+          - button "Silver is better" [ref=e21] [cursor=pointer]
+          - button "Blue is better" [ref=e22] [cursor=pointer]
+          - button "None are good" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - generic [ref=e25]: Notes for algorithm tuning
+        - textbox "Notes for algorithm tuning" [ref=e26]:
+          - /placeholder: e.g. same frontage strip, but algorithm over-penalised distance...
+      - generic [ref=e27]:
+        - button "Previous" [ref=e28] [cursor=pointer]
+        - button "Save and next" [ref=e29] [cursor=pointer]
+    - heading "Candidates" [level=2] [ref=e32]
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - paragraph [ref=e37]: Dataset
+        - strong [ref=e38]: No saved labels yet
+      - generic [ref=e39]:
+        - button "Export JSON" [ref=e40] [cursor=pointer]
+        - button "Export CSV" [ref=e41] [cursor=pointer]
+        - button "Clear" [ref=e42] [cursor=pointer]
+  - main [ref=e43]:
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - paragraph [ref=e46]: Map review
+        - strong [ref=e47]: Loading
+      - generic "Tier legend" [ref=e48]:
+        - generic [ref=e49]: Gold
+        - generic [ref=e51]: Silver
+        - generic [ref=e53]: Blue

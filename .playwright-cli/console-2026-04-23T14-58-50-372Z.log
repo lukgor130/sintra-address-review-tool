@@ -1,0 +1,2 @@
+[    6752ms] [WARNING] Only use ES modules from ArcGIS CDN for testing: https://arcg.is/0W5P5f#core-api @ https://js.arcgis.com/4.32/@arcgis/core/kernel.js:4
+[    7142ms] [INFO] Using Calcite Components 3.0.3 [Date: 2025-02-19, Revision: 0b0b89f59] @ https://js.arcgis.com/4.32/@arcgis/core/chunks/componentsUtils.js:7

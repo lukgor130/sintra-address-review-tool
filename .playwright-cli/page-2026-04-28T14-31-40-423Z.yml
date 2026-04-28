@@ -1,0 +1,76 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Local Knowledge Review
+      - heading "Area of interest" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Use the map with someone who knows the area well, mark what they know about each plot, and export a clean outreach lead sheet afterwards.
+    - region "Review progress" [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: Search plots
+        - searchbox "Search plots" [ref=e12]
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: Filter
+          - combobox "Filter" [ref=e16] [cursor=pointer]:
+            - option "All plots" [selected]
+            - option "Actionable leads"
+            - option "Still open"
+            - option "No local lead"
+        - generic [ref=e17]:
+          - generic [ref=e18]: Sort
+          - combobox "Sort" [ref=e19] [cursor=pointer]:
+            - option "By status" [selected]
+            - option "By parcel ID"
+            - option "By area"
+    - heading "Plots in view" [level=2] [ref=e22]
+    - generic [ref=e25]:
+      - heading "Select a plot" [level=2] [ref=e27]
+      - generic [ref=e30]:
+        - generic [ref=e31]: What does the local contact know?
+        - generic [ref=e32]:
+          - button "Knows owner" [ref=e33] [cursor=pointer]
+          - button "Knows someone linked" [ref=e34] [cursor=pointer]
+          - button "Possible lead" [ref=e35] [cursor=pointer]
+          - button "Needs research" [ref=e36] [cursor=pointer]
+          - button "No lead" [ref=e37] [cursor=pointer]
+      - generic [ref=e38]:
+        - generic [ref=e39]: Lead name or owner clue
+        - textbox "Lead name or owner clue" [ref=e40]:
+          - /placeholder: Person, family name, business, or landmark clue
+      - generic [ref=e41]:
+        - generic [ref=e42]: How do we reach or verify this lead?
+        - textbox "How do we reach or verify this lead?" [ref=e43]:
+          - /placeholder: Neighbour, café owner, WhatsApp, old owner, local broker...
+      - generic [ref=e44]:
+        - generic [ref=e45]: Confidence
+        - generic [ref=e46]:
+          - button "High" [ref=e47] [cursor=pointer]
+          - button "Medium" [ref=e48] [cursor=pointer]
+          - button "Low" [ref=e49] [cursor=pointer]
+      - generic [ref=e50]:
+        - generic [ref=e51]: Notes
+        - textbox "Notes" [ref=e52]:
+          - /placeholder: "Anything useful: local nickname, family link, whether the plot feels abandoned, likely gatekeeper..."
+      - generic [ref=e53]:
+        - button "Previous" [ref=e54] [cursor=pointer]
+        - button "Save and next" [ref=e55] [cursor=pointer]
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - paragraph [ref=e58]: Export
+        - strong [ref=e59]: No saved notes yet
+      - generic [ref=e60]:
+        - button "Export JSON" [ref=e61] [cursor=pointer]
+        - button "Export CSV" [ref=e62] [cursor=pointer]
+        - button "Clear" [ref=e63] [cursor=pointer]
+  - main [ref=e64]:
+    - generic [ref=e65]:
+      - generic [ref=e66]:
+        - paragraph [ref=e67]: Field view
+        - strong [ref=e68]: Loading map
+      - generic "Knowledge status legend" [ref=e69]:
+        - generic [ref=e70]: Owner
+        - generic [ref=e72]: Linked
+        - generic [ref=e74]: Maybe
+        - generic [ref=e76]: Open
+        - generic [ref=e78]: No lead
