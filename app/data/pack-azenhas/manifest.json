@@ -1,6 +1,6 @@
 {
   "name": "Azenhas do Mar",
-  "generatedAt": "2026-04-28T14:47:07Z",
+  "generatedAt": "2026-04-28T21:57:21Z",
   "format": "sintra-aoi-pack-v1",
   "basemap": {
     "type": "pmtiles",
@@ -14,6 +14,19 @@
     "glyphs": "./assets/fonts/{fontstack}/{range}.pbf",
     "sprite": "./assets/sprites/v4/light",
     "styleVersion": "5.7.2"
+  },
+  "styles": {
+    "street": {
+      "file": "./style.json",
+      "label": "Street"
+    },
+    "satellite": {
+      "file": "./satellite-style.json",
+      "label": "Satellite",
+      "tileTemplate": "./satellite/{z}/{x}/{y}.jpg",
+      "minzoom": 0,
+      "maxzoom": 18
+    }
   },
   "data": {
     "aoi": "./aoi.geojson",

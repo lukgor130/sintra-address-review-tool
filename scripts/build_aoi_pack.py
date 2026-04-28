@@ -2,10 +2,13 @@
 
 import argparse
 import json
+import math
 import subprocess
 import sys
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from pathlib import Path
 
 from pyproj import Transformer
@@ -20,6 +23,9 @@ STYLE_TEMPLATE_URL = "https://npm-style.protomaps.dev/style.json"
 FONT_STACKS = ["Noto Sans Regular", "Noto Sans Medium", "Noto Sans Italic"]
 FONT_RANGES = ["0-255", "256-511"]
 SPRITE_FILES = ["light.json", "light.png", "light@2x.json", "light@2x.png"]
+SATELLITE_TILE_URL = (
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+)
 BROWSER_VENDOR = {
     "maplibre-gl.js": "https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js",
     "maplibre-gl.css": "https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css",
@@ -129,13 +135,43 @@ def rewrite_style(style: dict) -> dict:
             **style["sources"],
             "protomaps": {
                 "type": "vector",
-                "url": "pmtiles://./basemap.pmtiles",
+                "url": "pmtiles://basemap.pmtiles",
                 "attribution": style["sources"]["protomaps"].get(
                     "attribution",
                     '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap</a>',
                 ),
             },
         },
+    }
+
+
+def build_satellite_style(street_style: dict, satellite: dict) -> dict:
+    satellite_layers = [
+        deepcopy(layer)
+        for layer in street_style["layers"]
+        if layer.get("type") in {"line", "symbol", "circle"}
+    ]
+    return {
+        **deepcopy(street_style),
+        "sources": {
+            **deepcopy(street_style["sources"]),
+            "satellite": {
+                "type": "raster",
+                "tiles": [satellite["tileTemplate"]],
+                "tileSize": 256,
+                "minzoom": satellite["minzoom"],
+                "maxzoom": satellite["maxzoom"],
+                "attribution": satellite["attribution"],
+            },
+        },
+        "layers": [
+            {
+                "id": "satellite-basemap",
+                "type": "raster",
+                "source": "satellite",
+            },
+            *satellite_layers,
+        ],
     }
 
 
@@ -147,6 +183,70 @@ def write_json(path: Path, payload: dict | list) -> None:
 def download_file(url: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(fetch_bytes(url))
+
+
+def lon_to_tile_x(lon: float, zoom: int) -> int:
+    scale = 1 << zoom
+    x = int(math.floor((lon + 180.0) / 360.0 * scale))
+    return max(0, min(scale - 1, x))
+
+
+def lat_to_tile_y(lat: float, zoom: int) -> int:
+    scale = 1 << zoom
+    clamped = max(min(lat, 85.05112878), -85.05112878)
+    lat_rad = math.radians(clamped)
+    y = int(
+        math.floor(
+            (1.0 - math.log(math.tan(lat_rad) + (1.0 / math.cos(lat_rad))) / math.pi)
+            / 2.0
+            * scale
+        )
+    )
+    return max(0, min(scale - 1, y))
+
+
+def tile_range_for_bbox(bbox: list[float], zoom: int, pad: int = 1) -> tuple[int, int, int, int]:
+    min_lon, min_lat, max_lon, max_lat = bbox
+    min_x = max(0, lon_to_tile_x(min_lon, zoom) - pad)
+    max_x = min((1 << zoom) - 1, lon_to_tile_x(max_lon, zoom) + pad)
+    min_y = max(0, lat_to_tile_y(max_lat, zoom) - pad)
+    max_y = min((1 << zoom) - 1, lat_to_tile_y(min_lat, zoom) + pad)
+    return min_x, min_y, max_x, max_y
+
+
+def download_satellite_tiles(
+    output_dir: Path,
+    bbox: list[float],
+    minzoom: int,
+    maxzoom: int,
+    source_url: str,
+    worker_count: int = 8,
+) -> dict:
+    tasks: list[tuple[int, int, int, Path, str]] = []
+    for zoom in range(minzoom, maxzoom + 1):
+        min_x, min_y, max_x, max_y = tile_range_for_bbox(bbox, zoom)
+        for x in range(min_x, max_x + 1):
+            for y in range(min_y, max_y + 1):
+                tile_path = output_dir / "satellite" / str(zoom) / str(x) / f"{y}.jpg"
+                tasks.append((zoom, x, y, tile_path, source_url.format(z=zoom, x=x, y=y)))
+
+    def fetch_tile(task: tuple[int, int, int, Path, str]) -> None:
+        _, _, _, tile_path, url = task
+        if tile_path.exists():
+            return
+        tile_path.parent.mkdir(parents=True, exist_ok=True)
+        tile_path.write_bytes(fetch_bytes(url))
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        list(executor.map(fetch_tile, tasks))
+
+    return {
+        "tileTemplate": "./satellite/{z}/{x}/{y}.jpg",
+        "minzoom": minzoom,
+        "maxzoom": maxzoom,
+        "tileCount": len(tasks),
+        "attribution": "Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community.",
+    }
 
 
 def extract_basemap(build_key: str, bbox: list[float], output_path: Path, maxzoom: int) -> None:
@@ -192,6 +292,7 @@ def pack_manifest(
     view: dict,
     parcel_count: int,
     maxzoom: int,
+    satellite: dict,
 ) -> dict:
     return {
         "name": aoi_name,
@@ -209,6 +310,19 @@ def pack_manifest(
             "glyphs": "./assets/fonts/{fontstack}/{range}.pbf",
             "sprite": "./assets/sprites/v4/light",
             "styleVersion": style_version,
+        },
+        "styles": {
+            "street": {
+                "file": "./style.json",
+                "label": "Street",
+            },
+            "satellite": {
+                "file": "./satellite-style.json",
+                "label": "Satellite",
+                "tileTemplate": satellite["tileTemplate"],
+                "minzoom": satellite["minzoom"],
+                "maxzoom": satellite["maxzoom"],
+            },
         },
         "data": {
             "aoi": "./aoi.geojson",
@@ -244,6 +358,12 @@ def parse_args() -> argparse.Namespace:
         default=15,
         help="Maximum zoom level to keep in the local basemap extract.",
     )
+    parser.add_argument(
+        "--satellite-maxzoom",
+        type=int,
+        default=18,
+        help="Maximum zoom level to keep in the local satellite tile cache.",
+    )
     return parser.parse_args()
 
 
@@ -262,12 +382,20 @@ def main() -> None:
     view = build_view(payload, transformer)
     parcels_geojson = build_parcels_geojson(payload, transformer)
     aoi_geojson = build_aoi_geojson(payload, transformer)
+    satellite = download_satellite_tiles(
+        output_dir,
+        view["bbox"],
+        0,
+        args.satellite_maxzoom,
+        SATELLITE_TILE_URL,
+    )
 
     style = fetch_json(
         f"{STYLE_TEMPLATE_URL}?version={urllib.parse.quote(args.style_version)}"
         f"&theme=light&tiles={urllib.parse.quote(build_key_without_suffix)}&lang=pt"
     )
     style = rewrite_style(style)
+    satellite_style = build_satellite_style(style, satellite)
 
     write_json(output_dir / "manifest.json", pack_manifest(
         aoi_name=args.aoi_name,
@@ -276,8 +404,10 @@ def main() -> None:
         view=view,
         parcel_count=len(parcels_geojson["features"]),
         maxzoom=args.maxzoom,
+        satellite=satellite,
     ))
     write_json(output_dir / "style.json", style)
+    write_json(output_dir / "satellite-style.json", satellite_style)
     write_json(output_dir / "aoi.geojson", aoi_geojson)
     write_json(output_dir / "parcels.geojson", parcels_geojson)
     write_json(output_dir / "source-aoi.json", payload)

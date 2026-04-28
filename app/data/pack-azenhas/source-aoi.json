@@ -5,7 +5,7 @@
     "addressSearchPaddingMeters": 120,
     "basemapMapserviceId": "24",
     "basemapServiceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/Internet/Base_cartografica_Dez2014/MapServer",
-    "basemapToken": "KjIYf-iKpuELbnqDKsvHgUCXQf2u3RAb5Wtys9wEHYE.",
+    "basemapToken": "KjIYf-iKpuELbnqDKsvHgYNHcDrkcswbvzjwbPyQTKM.",
     "generatedFor": "Local knowledge parcel review",
     "datasetType": "aoi-review",
     "spatialReference": {

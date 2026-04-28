@@ -1,5 +1,6 @@
 import io
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -129,6 +130,114 @@ class RequestRetryTests(unittest.TestCase):
         self.assertIsInstance(request, Request)
         self.assertEqual(request.get_method(), "POST")
         self.assertIn(b"geometryType=esriGeometryPolygon", request.data)
+
+
+class CacheSourceLayerTests(unittest.TestCase):
+    def test_fetch_layer_features_batches_object_ids(self):
+        layer_definition = {
+            "name": "Test Layer",
+            "geometryType": "esriGeometryPolygon",
+            "objectIdField": "OBJECTID",
+            "fields": [{"name": "OBJECTID"}],
+            "maxRecordCount": 2,
+        }
+
+        with mock.patch.object(sample, "fetch_layer_definition", return_value=layer_definition), mock.patch.object(
+            sample,
+            "fetch_layer_ids",
+            return_value=[1, 2, 3, 4, 5],
+        ), mock.patch.object(sample, "get_json") as mocked_get_json:
+            mocked_get_json.side_effect = [
+                {"features": [{"attributes": {"OBJECTID": 1}}]},
+                {"features": [{"attributes": {"OBJECTID": 3}}]},
+                {"features": [{"attributes": {"OBJECTID": 5}}]},
+            ]
+
+            result = sample.fetch_layer_features(
+                "https://example.com/arcgis/rest/services/Service/MapServer",
+                12,
+                "token",
+                batch_size=2,
+            )
+
+        self.assertEqual(
+            [call.args[0] for call in mocked_get_json.call_args_list],
+            [
+                "https://example.com/arcgis/rest/services/Service/MapServer/12/query",
+                "https://example.com/arcgis/rest/services/Service/MapServer/12/query",
+                "https://example.com/arcgis/rest/services/Service/MapServer/12/query",
+            ],
+        )
+        self.assertEqual(result["layerName"], "Test Layer")
+        self.assertEqual([feature["attributes"]["OBJECTID"] for feature in result["features"]], [1, 3, 5])
+
+    def test_cache_source_layers_writes_manifest_and_layer_files(self):
+        parcel_layer = {
+            "layerId": 12,
+            "layerName": "Áreas Livres e Expectantes",
+            "geometryType": "esriGeometryPolygon",
+            "features": [{"attributes": {"OBJECTID": 1}}],
+        }
+        address_layer = {
+            "layerId": 44,
+            "layerName": "Nº policia",
+            "geometryType": "esriGeometryPoint",
+            "features": [{"attributes": {"OBJECTID": 11}}],
+        }
+        road_layer = {
+            "layerId": 45,
+            "layerName": "Ruas",
+            "geometryType": "esriGeometryPolyline",
+            "features": [{"attributes": {"OBJECTID": 21}}],
+        }
+        regulatory_group = {"name": "Limites Regulamentares", "layers": [30, 31, 32]}
+        regulatory_layer = {
+            "layerId": 30,
+            "layerName": "Unidades Operativas de Planeamento e Gestão",
+            "geometryType": "esriGeometryPolygon",
+            "features": [{"attributes": {"OBJECTID": 31}}],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir, mock.patch.object(
+            sample,
+            "load_tokens",
+            return_value=("parcel-token", "https://example.com/base", "base-token"),
+        ), mock.patch.object(sample, "fetch_layer_features", side_effect=[
+            parcel_layer,
+            address_layer,
+            road_layer,
+            regulatory_layer,
+            {**regulatory_layer, "layerId": 31, "layerName": "Áreas Urbanas de Génese Ilegal"},
+            {**regulatory_layer, "layerId": 32, "layerName": "Áreas de Reabilitação Urbana"},
+        ]), mock.patch.object(
+            sample,
+            "fetch_layer_definition",
+            return_value=regulatory_group,
+        ), mock.patch.object(sample.time, "strftime", return_value="2026-04-28T21:00:00Z"):
+            manifest = sample.cache_source_layers(temp_dir)
+
+            manifest_path = Path(temp_dir) / "manifest.json"
+            parcels_path = Path(temp_dir) / "parcels-livre-expectante.json"
+            addresses_path = Path(temp_dir) / "addresses-full.json"
+            roads_path = Path(temp_dir) / "roads-full.json"
+            regulatory_path = Path(temp_dir) / "limites-regulamentares" / "30-unidades-operativas-de-planeamento-e-gestao.json"
+
+            self.assertTrue(manifest_path.exists())
+            self.assertTrue(parcels_path.exists())
+            self.assertTrue(addresses_path.exists())
+            self.assertTrue(roads_path.exists())
+            self.assertTrue(regulatory_path.exists())
+            self.assertEqual(manifest["datasets"]["parcels"]["count"], 1)
+            self.assertEqual(manifest["datasets"]["addresses"]["count"], 1)
+            self.assertEqual(manifest["datasets"]["roads"]["count"], 1)
+            self.assertEqual(len(manifest["datasets"]["regulatoryLimits"]["layers"]), 3)
+
+            written_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(written_manifest["datasets"]["parcels"]["file"], "parcels-livre-expectante.json")
+            self.assertEqual(
+                written_manifest["datasets"]["regulatoryLimits"]["layers"][0]["file"],
+                "limites-regulamentares/30-unidades-operativas-de-planeamento-e-gestao.json",
+            )
 
 
 if __name__ == "__main__":

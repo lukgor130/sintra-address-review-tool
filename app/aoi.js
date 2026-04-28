@@ -11,9 +11,6 @@ const parcelsGeojson = await fetch(new URL(manifest.data.parcels, manifestUrl)).
 const aoiGeojson = await fetch(new URL(manifest.data.aoi, manifestUrl)).then((response) =>
   response.json(),
 );
-const style = await fetch(new URL(manifest.style.file, manifestUrl)).then((response) =>
-  response.json(),
-);
 const basemapUrl = new URL(manifest.basemap.file, manifestUrl);
 const basemapKey = basemapUrl.pathname.split("/").pop() ?? "basemap.pmtiles";
 const basemapFile = new File(
@@ -23,10 +20,25 @@ const basemapFile = new File(
     type: "application/octet-stream",
   },
 );
+const basemapStyleKey = localStorage.getItem(`sintra-aoi-basemap-mode:${manifest.name}`) ?? "street";
+const basemapStyleFiles = {
+  street: new URL(manifest.style.file, manifestUrl),
+  satellite: new URL(manifest.styles?.satellite?.file ?? "./satellite-style.json", manifestUrl),
+};
+const [streetStyle, satelliteStyle] = await Promise.all([
+  fetch(basemapStyleFiles.street).then((response) => response.json()),
+  fetch(basemapStyleFiles.satellite).then((response) => response.json()),
+]);
 
-style.glyphs = `${packBaseUrl.href}assets/fonts/{fontstack}/{range}.pbf`;
-style.sprite = new URL("assets/sprites/v4/light", packBaseUrl).href;
-style.sources.protomaps.url = `pmtiles://${basemapKey}`;
+const basemapStyles = {
+  street: streetStyle,
+  satellite: satelliteStyle,
+};
+const basemapModeLabel = {
+  street: manifest.styles?.street?.label ?? "Street",
+  satellite: manifest.styles?.satellite?.label ?? "Satellite",
+};
+let basemapMode = basemapStyles[basemapStyleKey] ? basemapStyleKey : "street";
 
 const STORAGE_KEY = `sintra-aoi-feedback-v2:${manifest.name}`;
 
@@ -76,7 +88,8 @@ const basemapStatusEl = document.querySelector("#basemap-status");
 datasetTitleEl.textContent = manifest.name;
 datasetDescriptionEl.textContent = `${manifest.parcelCount} plots in this local map pack. The basemap, labels, parcel geometry, and review data all load from local files.`;
 basemapStatusEl.hidden = false;
-basemapStatusEl.textContent = "Fully local basemap";
+basemapStatusEl.textContent =
+  basemapMode === "satellite" ? `${basemapModeLabel.satellite} + labels` : `${basemapModeLabel.street} basemap`;
 
 function normalizeText(value) {
   return String(value ?? "").trim().toLowerCase();
@@ -115,6 +128,24 @@ const parcels = parcelsGeojson.features.map((feature) => ({
 
 let activeParcelId = parcels[0]?.objectId ?? null;
 let mapLoaded = false;
+let initialViewportApplied = false;
+const BASEMAP_STORAGE_KEY = `sintra-aoi-basemap-mode:${manifest.name}`;
+
+function cloneStyle(styleObject) {
+  return JSON.parse(JSON.stringify(styleObject));
+}
+
+function prepareStyle(styleObject) {
+  const next = cloneStyle(styleObject);
+  next.glyphs = `${packBaseUrl.href}assets/fonts/{fontstack}/{range}.pbf`;
+  next.sprite = new URL("assets/sprites/v4/light", packBaseUrl).href;
+  if (next.sources?.satellite?.tiles?.length) {
+    next.sources.satellite.tiles = [
+      `${packBaseUrl.href}satellite/{z}/{x}/{y}.jpg`,
+    ];
+  }
+  return next;
+}
 
 function feedbackKey(parcel) {
   return String(parcel.sourceObjectId);
@@ -390,7 +421,7 @@ maplibregl.addProtocol("pmtiles", protocol.tile);
 
 const map = new maplibregl.Map({
   container: "viewDiv",
-  style,
+  style: prepareStyle(basemapStyles[basemapMode]),
   center: manifest.view.center,
   zoom: manifest.view.zoom,
   maxZoom: manifest.basemap.maxzoom + 2,
@@ -399,100 +430,31 @@ const map = new maplibregl.Map({
 
 map.addControl(new maplibregl.NavigationControl(), "top-left");
 
-function emptyCueFeatureCollection() {
-  return { type: "FeatureCollection", features: [] };
-}
+const basemapToggleButtons = [...document.querySelectorAll("[data-basemap-mode]")];
 
-function activeCueFeature(parcel) {
-  if (!parcel?.selectedAddress?.coordinates) {
-    return emptyCueFeatureCollection();
+function updateBasemapUi() {
+  for (const button of basemapToggleButtons) {
+    const active = button.dataset.basemapMode === basemapMode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
   }
-  return {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        properties: {
-          title: `${parcel.selectedAddress.porta || "?"} ${parcel.selectedAddress.rua}`,
-          localidade: parcel.selectedAddress.localidade ?? "",
-        },
-        geometry: {
-          type: "Point",
-          coordinates: parcel.selectedAddress.coordinates,
-        },
-      },
-    ],
-  };
+  basemapStatusEl.textContent =
+    basemapMode === "satellite"
+      ? `${basemapModeLabel.satellite} + labels`
+      : `${basemapModeLabel.street} basemap`;
 }
 
-function syncParcelFeatureStates() {
-  if (!mapLoaded) {
+function setBasemapMode(nextMode) {
+  if (!basemapStyles[nextMode] || nextMode === basemapMode) {
     return;
   }
-  for (const parcel of parcels) {
-    map.setFeatureState(
-      { source: "parcels", id: parcel.objectId },
-      {
-        status: parcelStatus(parcel),
-        active: parcel.objectId === activeParcelId,
-      },
-    );
-  }
+  basemapMode = nextMode;
+  localStorage.setItem(BASEMAP_STORAGE_KEY, basemapMode);
+  updateBasemapUi();
+  map.setStyle(prepareStyle(basemapStyles[basemapMode]));
 }
 
-function refreshMapSelection() {
-  if (!mapLoaded) {
-    return;
-  }
-  syncParcelFeatureStates();
-  const parcel = activeParcel();
-  map.getSource("active-cue").setData(activeCueFeature(parcel));
-}
-
-function parcelBounds(parcel) {
-  const coordinates = parcel.geometry.coordinates[0];
-  const lons = coordinates.map((point) => point[0]);
-  const lats = coordinates.map((point) => point[1]);
-  return [
-    [Math.min(...lons), Math.min(...lats)],
-    [Math.max(...lons), Math.max(...lats)],
-  ];
-}
-
-function mapPadding() {
-  if (globalThis.innerWidth < 1120) {
-    return { top: 72, right: 28, bottom: 28, left: 28 };
-  }
-  return { top: 90, right: 120, bottom: 90, left: 420 };
-}
-
-function renderAll() {
-  const visible = ensureActiveParcel();
-  renderMetrics();
-  renderParcelList(visible);
-  renderParcelEditor(activeParcel(), visible);
-  refreshMapSelection();
-}
-
-function selectParcel(parcelId, { zoom = true } = {}) {
-  activeParcelId = parcelId;
-  renderAll();
-  if (!zoom || !mapLoaded) {
-    return;
-  }
-  const parcel = activeParcel();
-  if (parcel) {
-    map.fitBounds(parcelBounds(parcel), {
-      padding: mapPadding(),
-      duration: 500,
-      maxZoom: 17,
-    });
-  }
-}
-
-map.on("load", () => {
-  mapLoaded = true;
-
+function addMapOverlays() {
   map.addSource("aoi", {
     type: "geojson",
     data: aoiGeojson,
@@ -586,32 +548,147 @@ map.on("load", () => {
       "circle-stroke-width": 2,
     },
   });
+}
 
-  map.on("click", "parcel-fill", (event) => {
-    const feature = event.features?.[0];
-    if (feature?.id != null) {
-      selectParcel(Number(feature.id));
-    }
-  });
+function handleParcelClick(event) {
+  const feature = event.features?.[0];
+  if (feature?.id != null) {
+    selectParcel(Number(feature.id));
+  }
+}
 
-  map.on("mouseenter", "parcel-fill", () => {
-    map.getCanvas().style.cursor = "pointer";
-  });
+function handleParcelEnter() {
+  map.getCanvas().style.cursor = "pointer";
+}
 
-  map.on("mouseleave", "parcel-fill", () => {
-    map.getCanvas().style.cursor = "";
-  });
+function handleParcelLeave() {
+  map.getCanvas().style.cursor = "";
+}
 
-  map.fitBounds(
-    [
-      [manifest.view.bbox[0], manifest.view.bbox[1]],
-      [manifest.view.bbox[2], manifest.view.bbox[3]],
-    ],
-    { padding: 48, duration: 0 },
-  );
+function bindMapEvents() {
+  map.off("click", "parcel-fill", handleParcelClick);
+  map.off("mouseenter", "parcel-fill", handleParcelEnter);
+  map.off("mouseleave", "parcel-fill", handleParcelLeave);
+  map.on("click", "parcel-fill", handleParcelClick);
+  map.on("mouseenter", "parcel-fill", handleParcelEnter);
+  map.on("mouseleave", "parcel-fill", handleParcelLeave);
+}
 
+map.on("style.load", () => {
+  mapLoaded = true;
+  addMapOverlays();
+  bindMapEvents();
+  syncParcelFeatureStates();
+  if (!initialViewportApplied) {
+    map.fitBounds(
+      [
+        [manifest.view.bbox[0], manifest.view.bbox[1]],
+        [manifest.view.bbox[2], manifest.view.bbox[3]],
+      ],
+      { padding: 48, duration: 0 },
+    );
+    initialViewportApplied = true;
+  }
+  updateBasemapUi();
   renderAll();
 });
+
+for (const button of basemapToggleButtons) {
+  button.addEventListener("click", () => {
+    setBasemapMode(button.dataset.basemapMode);
+  });
+}
+
+function emptyCueFeatureCollection() {
+  return { type: "FeatureCollection", features: [] };
+}
+
+function activeCueFeature(parcel) {
+  if (!parcel?.selectedAddress?.coordinates) {
+    return emptyCueFeatureCollection();
+  }
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        properties: {
+          title: `${parcel.selectedAddress.porta || "?"} ${parcel.selectedAddress.rua}`,
+          localidade: parcel.selectedAddress.localidade ?? "",
+        },
+        geometry: {
+          type: "Point",
+          coordinates: parcel.selectedAddress.coordinates,
+        },
+      },
+    ],
+  };
+}
+
+function syncParcelFeatureStates() {
+  if (!mapLoaded) {
+    return;
+  }
+  for (const parcel of parcels) {
+    map.setFeatureState(
+      { source: "parcels", id: parcel.objectId },
+      {
+        status: parcelStatus(parcel),
+        active: parcel.objectId === activeParcelId,
+      },
+    );
+  }
+}
+
+function refreshMapSelection() {
+  if (!mapLoaded) {
+    return;
+  }
+  syncParcelFeatureStates();
+  const parcel = activeParcel();
+  map.getSource("active-cue").setData(activeCueFeature(parcel));
+}
+
+function parcelBounds(parcel) {
+  const coordinates = parcel.geometry.coordinates[0];
+  const lons = coordinates.map((point) => point[0]);
+  const lats = coordinates.map((point) => point[1]);
+  return [
+    [Math.min(...lons), Math.min(...lats)],
+    [Math.max(...lons), Math.max(...lats)],
+  ];
+}
+
+function mapPadding() {
+  if (globalThis.innerWidth < 1120) {
+    return { top: 72, right: 28, bottom: 28, left: 28 };
+  }
+  return { top: 90, right: 120, bottom: 90, left: 420 };
+}
+
+function renderAll() {
+  const visible = ensureActiveParcel();
+  renderMetrics();
+  renderParcelList(visible);
+  renderParcelEditor(activeParcel(), visible);
+  refreshMapSelection();
+}
+
+function selectParcel(parcelId, { zoom = true } = {}) {
+  activeParcelId = parcelId;
+  renderAll();
+  if (!zoom || !mapLoaded) {
+    return;
+  }
+  const parcel = activeParcel();
+  if (parcel) {
+    map.fitBounds(parcelBounds(parcel), {
+      padding: mapPadding(),
+      duration: 500,
+      maxZoom: 17,
+    });
+  }
+}
 
 parcelListEl.addEventListener("click", (event) => {
   const card = event.target.closest("[data-parcel-id]");

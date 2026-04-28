@@ -415,6 +415,32 @@ button.is-active {
   line-height: 1.35;
 }
 
+.basemap-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.basemap-toggle button {
+  width: auto;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 251, 244, 0.78);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.basemap-toggle button.is-active {
+  color: var(--ink);
+  border-color: rgba(46, 111, 115, 0.42);
+  background: rgba(255, 251, 244, 0.98);
+  box-shadow: 0 10px 22px rgba(61, 52, 32, 0.1);
+}
+
 .legend {
   flex-wrap: wrap;
   color: var(--muted);

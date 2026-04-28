@@ -22,6 +22,24 @@ cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
 python3 extract_sample.py
 ```
 
+## Cache The Source Layers
+
+Use the cache mode to pull the full source layers locally before doing spatial
+indexing or model work:
+
+- all `Livre` and `Expectante` parcels
+- the full `Nº policia` address layer
+- the full `Ruas` road layer
+- the `Limites Regulamentares` sublayers
+
+```bash
+cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
+python3 extract_sample.py --cache-source-layers
+```
+
+By default this writes to `app/data/source-cache/` with a manifest and one JSON
+file per source layer. Use `--cache-dir` to point the cache somewhere else.
+
 ## Build An AOI Review Pack
 
 The local-knowledge mode accepts a zipped shapefile AOI and generates a fully
@@ -29,6 +47,7 @@ local map pack:
 
 - parcel geometry and local-review metadata
 - a clipped local Protomaps basemap in `PMTiles`
+- a local satellite tile cache with labels for a second basemap mode
 - local glyph and sprite assets for labels/icons
 - a manifest the browser app can load directly
 
@@ -48,10 +67,16 @@ This writes a local pack under `app/data/pack-azenhas/`, including:
 - `manifest.json`
 - `basemap.pmtiles`
 - `style.json`
+- `satellite-style.json`
+- `satellite/`
 - `aoi.geojson`
 - `parcels.geojson`
 - `assets/fonts/`
 - `assets/sprites/`
+
+The satellite mode is built from public imagery tiles at pack-generation time
+and then served locally from static files, so the deployed page has no runtime
+imagery dependency.
 
 ## Run Locally
 

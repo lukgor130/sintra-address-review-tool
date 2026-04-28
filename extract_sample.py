@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 import os
+import unicodedata
 import tempfile
 import time
 import urllib.parse
@@ -22,6 +23,7 @@ OUTPUT_DIR = os.path.join(
 )
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "sample.json")
 AOI_OUTPUT_FILE = os.path.join(OUTPUT_DIR, "aoi-azenhas.json")
+SOURCE_CACHE_DIR = os.path.join(OUTPUT_DIR, "source-cache")
 
 SITE_ID = "ApoioInvestidor"
 PARCEL_SERVICE_ID = "0"
@@ -45,6 +47,7 @@ ROAD_CROSSING_END_TRIM_METERS = 0.75
 REQUEST_TIMEOUT_SECONDS = 60
 REQUEST_RETRIES = 3
 REQUEST_RETRY_BACKOFF_SECONDS = 1.5
+QUERY_OBJECT_IDS_BATCH_SIZE = 200
 TIER_ORDER = {"gold": 0, "silver": 1, "nearby": 2}
 SPATIAL_REFERENCE = {"wkid": 3763}
 
@@ -76,6 +79,21 @@ def request_json(url: str, params: dict | None = None, method: str = "GET") -> d
     raise RuntimeError(f"Request failed after retries: {url}") from last_error
 
 
+def slugify(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+    pieces = []
+    for char in ascii_value.lower():
+        if char.isalnum():
+            pieces.append(char)
+        else:
+            pieces.append("-")
+    slug = "".join(pieces).strip("-")
+    while "--" in slug:
+        slug = slug.replace("--", "-")
+    return slug or "layer"
+
+
 def get_json(url: str, params: dict | None = None) -> dict:
     return request_json(url, params=params, method="GET")
 
@@ -94,6 +112,72 @@ def get_mapservice_config(mapservice_id: str) -> dict:
     return get_json(
         f"{BASE_URL}/MuniSIG/REST/sites/{SITE_ID}/map/mapservices/{mapservice_id}?f=pjson"
     )
+
+
+def fetch_layer_definition(service_url: str, layer_id: int | str, token: str) -> dict:
+    return get_json(f"{service_url}/{layer_id}", {"f": "pjson", "token": token})
+
+
+def fetch_layer_ids(
+    service_url: str,
+    layer_id: int | str,
+    token: str,
+    where: str = "1=1",
+) -> list[int]:
+    response = get_json(
+        f"{service_url}/{layer_id}/query",
+        {
+            "where": where,
+            "returnIdsOnly": "true",
+            "f": "pjson",
+            "token": token,
+        },
+    )
+    return sorted(response.get("objectIds", []))
+
+
+def fetch_layer_features(
+    service_url: str,
+    layer_id: int | str,
+    token: str,
+    *,
+    where: str = "1=1",
+    out_fields: str = "*",
+    return_geometry: bool = True,
+    batch_size: int = QUERY_OBJECT_IDS_BATCH_SIZE,
+) -> dict:
+    layer_definition = fetch_layer_definition(service_url, layer_id, token)
+    object_ids = fetch_layer_ids(service_url, layer_id, token, where=where)
+    features = []
+    query_url = f"{service_url}/{layer_id}/query"
+
+    for start in range(0, len(object_ids), batch_size):
+        batch = object_ids[start : start + batch_size]
+        if not batch:
+            continue
+        batch_response = get_json(
+            query_url,
+            {
+                "objectIds": ",".join(str(object_id) for object_id in batch),
+                "outFields": out_fields,
+                "returnGeometry": "true" if return_geometry else "false",
+                "f": "pjson",
+                "token": token,
+            },
+        )
+        features.extend(batch_response.get("features", []))
+
+    return {
+        "serviceUrl": service_url,
+        "layerId": int(layer_id),
+        "layerName": layer_definition.get("name"),
+        "geometryType": layer_definition.get("geometryType"),
+        "where": where,
+        "objectIdField": layer_definition.get("objectIdField"),
+        "fields": layer_definition.get("fields", []),
+        "maxRecordCount": layer_definition.get("maxRecordCount"),
+        "features": features,
+    }
 
 
 def centroid_of_ring(ring: list[list[float]]) -> tuple[float, float]:
@@ -350,8 +434,8 @@ def build_street_segments(street_features: list[dict]) -> list[dict]:
                 if start == end:
                     continue
                 street_segments.append(
-                {
-                    "code": street_code,
+                    {
+                        "code": street_code,
                         "name": street_name,
                         "start": start,
                         "end": end,
@@ -692,6 +776,101 @@ def build_payload(
     }
 
 
+def write_json_file(path: str, payload: dict) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+
+
+def cache_source_layers(output_dir: str) -> dict:
+    parcel_token, base_service_url, base_token = load_tokens()
+    parcel_service_url = f"{BASE_URL}/arcgis/rest/services/Internet/ApoioInvestidor/MapServer"
+    base_map_url = base_service_url
+
+    parcel_filter = "UPPER(Tipologia) IN ('LIVRE','EXPECTANTE')"
+    parcel_layers = fetch_layer_features(
+        parcel_service_url,
+        PARCEL_LAYER_ID,
+        parcel_token,
+        where=parcel_filter,
+        out_fields="*",
+    )
+    address_layer = fetch_layer_features(
+        base_map_url,
+        ADDRESS_LAYER_ID,
+        base_token,
+        out_fields="*",
+    )
+    road_layer = fetch_layer_features(
+        base_map_url,
+        STREET_LAYER_ID,
+        base_token,
+        out_fields="*",
+    )
+    regulatory_group = fetch_layer_definition(parcel_service_url, 29, parcel_token)
+    regulatory_layers = []
+    for layer_id in (30, 31, 32):
+        regulatory_layers.append(
+            fetch_layer_features(parcel_service_url, layer_id, parcel_token, out_fields="*")
+        )
+
+    parcels_file = os.path.join(output_dir, "parcels-livre-expectante.json")
+    addresses_file = os.path.join(output_dir, "addresses-full.json")
+    roads_file = os.path.join(output_dir, "roads-full.json")
+
+    write_json_file(parcels_file, parcel_layers)
+    write_json_file(addresses_file, address_layer)
+    write_json_file(roads_file, road_layer)
+
+    regulatory_manifest = {
+        "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "groupLayer": regulatory_group,
+        "layers": [],
+    }
+    for layer in regulatory_layers:
+        filename = f"{layer['layerId']}-{slugify(layer['layerName'] or 'regulatory-layer')}.json"
+        relative_path = os.path.join("limites-regulamentares", filename)
+        write_json_file(os.path.join(output_dir, relative_path), layer)
+        regulatory_manifest["layers"].append(
+            {
+                "layerId": layer["layerId"],
+                "layerName": layer["layerName"],
+                "file": relative_path,
+                "count": len(layer["features"]),
+                "geometryType": layer["geometryType"],
+            }
+        )
+
+    manifest = {
+        "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "siteId": SITE_ID,
+        "parcelServiceUrl": parcel_service_url,
+        "basemapServiceUrl": base_map_url,
+        "datasets": {
+            "parcels": {
+                "file": os.path.basename(parcels_file),
+                "where": parcel_filter,
+                "count": len(parcel_layers["features"]),
+                "geometryType": parcel_layers["geometryType"],
+            },
+            "addresses": {
+                "file": os.path.basename(addresses_file),
+                "count": len(address_layer["features"]),
+                "geometryType": address_layer["geometryType"],
+            },
+            "roads": {
+                "file": os.path.basename(roads_file),
+                "count": len(road_layer["features"]),
+                "geometryType": road_layer["geometryType"],
+            },
+            "regulatoryLimits": regulatory_manifest,
+        },
+    }
+
+    write_json_file(os.path.join(output_dir, "manifest.json"), manifest)
+    return manifest
+
+
 def load_tokens() -> tuple[str, str, str]:
     parcel_service = get_mapservice_config(PARCEL_SERVICE_ID)
     parcel_conn = parse_connection_string(parcel_service["connectionString"])
@@ -772,6 +951,16 @@ def write_payload(payload: dict, output_file: str) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Prepare parcel review datasets.")
     parser.add_argument(
+        "--cache-source-layers",
+        action="store_true",
+        help="Cache the full parcel, address, road, and regulatory layers locally.",
+    )
+    parser.add_argument(
+        "--cache-dir",
+        default=SOURCE_CACHE_DIR,
+        help="Directory used for the source-layer cache.",
+    )
+    parser.add_argument(
         "--aoi-zip",
         help="Path to a zipped shapefile representing an area of interest.",
     )
@@ -789,6 +978,17 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+
+    if args.cache_source_layers:
+        manifest = cache_source_layers(args.cache_dir)
+        print(
+            f"Cached {manifest['datasets']['parcels']['count']} parcels, "
+            f"{manifest['datasets']['addresses']['count']} addresses, "
+            f"{manifest['datasets']['roads']['count']} roads, "
+            f"{sum(layer['count'] for layer in manifest['datasets']['regulatoryLimits']['layers'])} regulatory features "
+            f"to {args.cache_dir}"
+        )
+        return
 
     if args.aoi_zip:
         payload = generate_aoi_payload(args.aoi_zip, args.aoi_name)

@@ -147,6 +147,12 @@
             <strong id="map-title">Loading map</strong>
             <span class="map-status" id="basemap-status">Offline pack</span>
           </div>
+          <div class="basemap-toggle" role="tablist" aria-label="Basemap style">
+            <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
+            <button type="button" data-basemap-mode="satellite" aria-pressed="false">
+              Satellite
+            </button>
+          </div>
           <div class="legend" aria-label="Knowledge status legend">
             <span><i class="dot dot--owner"></i>Owner</span>
             <span><i class="dot dot--network"></i>Linked</span>
@@ -161,6 +167,6 @@
 
     <script src="./vendor/maplibre-gl.js"></script>
     <script src="./vendor/pmtiles.js"></script>
-    <script type="module" src="./aoi.js?v=2026-04-28-local-pack"></script>
+    <script type="module" src="./aoi.js?v=2026-04-28-satellite-toggle"></script>
   </body>
 </html>
