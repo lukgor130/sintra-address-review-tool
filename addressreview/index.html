@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sintra Address Training Review</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312232f'/%3E%3Ccircle cx='10' cy='20' r='4' fill='%23d9a431'/%3E%3Ccircle cx='16' cy='12' r='4' fill='%23c8ced6'/%3E%3Ccircle cx='22' cy='20' r='4' fill='%232d77b8'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="review-shell">
+      <aside class="decision-panel">
+        <header class="decision-header">
+          <p class="eyebrow">Training review</p>
+          <h1>Turn map judgement into model data</h1>
+          <p>
+            Review each parcel, correct the tier labels, and export a clean dataset
+            for the next address-selection algorithm.
+          </p>
+          <div class="header-links">
+            <a href="./source-explorer.html">Open source explorer</a>
+          </div>
+        </header>
+
+        <section class="progress-grid" id="progress-grid" aria-label="Review progress"></section>
+
+        <section class="parcel-review">
+          <div class="section-title">
+            <h2 id="parcel-title">Loading parcel</h2>
+            <span class="pill" id="parcel-position"></span>
+          </div>
+
+          <div class="decision-card" id="parcel-summary"></div>
+
+          <div class="field-group">
+            <label for="best-candidate">Actual best address</label>
+            <select id="best-candidate"></select>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Parcel-level decision</span>
+            <div class="button-row" id="parcel-decision">
+              <button type="button" data-parcel-decision="gold_correct">Gold is right</button>
+              <button type="button" data-parcel-decision="silver_better">Silver is better</button>
+              <button type="button" data-parcel-decision="blue_better">Blue is better</button>
+              <button type="button" data-parcel-decision="none_good">None are good</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="parcel-notes">Notes for algorithm tuning</label>
+            <textarea
+              id="parcel-notes"
+              rows="3"
+              placeholder="e.g. same frontage strip, but algorithm over-penalised distance..."
+            ></textarea>
+          </div>
+
+          <div class="nav-row">
+            <button type="button" class="ghost-button" id="previous-parcel">Previous</button>
+            <button type="button" class="primary-button" id="next-parcel">Save and next</button>
+          </div>
+        </section>
+
+        <section class="candidate-review">
+          <div class="section-title">
+            <h2>Candidates</h2>
+            <span class="pill" id="candidate-count"></span>
+          </div>
+          <div class="candidate-list" id="candidate-list"></div>
+        </section>
+
+        <section class="export-panel">
+          <div>
+            <p class="eyebrow">Dataset</p>
+            <strong id="save-state">No saved labels yet</strong>
+          </div>
+          <div class="export-actions">
+            <button type="button" id="export-json">Export JSON</button>
+            <button type="button" id="export-csv">Export CSV</button>
+            <button type="button" class="danger-button" id="clear-feedback">Clear</button>
+          </div>
+        </section>
+      </aside>
+
+      <main class="map-panel">
+        <div class="map-toolbar">
+          <div>
+            <p class="eyebrow">Map review</p>
+            <strong id="map-title">Loading</strong>
+            <span class="map-status" id="basemap-status" hidden></span>
+          </div>
+          <div class="legend" aria-label="Tier legend">
+            <span><i class="dot dot--gold"></i>Gold</span>
+            <span><i class="dot dot--silver"></i>Silver</span>
+            <span><i class="dot dot--blue"></i>Blue</span>
+          </div>
+        </div>
+        <div id="viewDiv"></div>
+        <div id="map-overlay" aria-hidden="true"></div>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js?v=2026-04-23-basemap-retry"></script>
+  </body>
+</html>

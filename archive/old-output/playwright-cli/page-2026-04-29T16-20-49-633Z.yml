@@ -1,0 +1,114 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Cached source explorer
+      - heading "Parcels and regulatory limits" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Explore the local cache before indexing. Toggle layers, inspect features, and verify the shape of the data without hitting ArcGIS at runtime.
+      - generic [ref=e8]:
+        - link "Back to review" [ref=e9] [cursor=pointer]:
+          - /url: ./index.html
+        - link "Manifest" [ref=e10] [cursor=pointer]:
+          - /url: ./data/source-cache/manifest.json
+    - region "Source summary" [ref=e11]:
+      - generic [ref=e137]:
+        - generic [ref=e138]: Parcels
+        - strong [ref=e139]: 4,882
+      - generic [ref=e140]:
+        - generic [ref=e141]: Livre
+        - strong [ref=e142]: 1,018
+      - generic [ref=e143]:
+        - generic [ref=e144]: Expectante
+        - strong [ref=e145]: 3,864
+      - generic [ref=e146]:
+        - generic [ref=e147]: Regulatory
+        - strong [ref=e148]: "130"
+      - generic [ref=e149]:
+        - generic [ref=e150]: Snapshot
+        - strong [ref=e151]: 4/28/2026
+    - region "Layer controls" [ref=e12]:
+      - group "Parcels · Livre + Expectante" [ref=e13]:
+        - generic [ref=e14]: Parcels · Livre + Expectante
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e18]:
+              - strong [ref=e19]: Livre
+              - generic [ref=e20]: 1,018 features
+            - generic [ref=e21]: Type
+          - generic [ref=e22]:
+            - generic [ref=e24]:
+              - strong [ref=e25]: Expectante
+              - generic [ref=e26]: 3,864 features
+            - generic [ref=e27]: Type
+      - group "Limites Regulamentares" [ref=e28]:
+        - generic [ref=e29]: Limites Regulamentares
+        - generic [ref=e30]:
+          - checkbox "Show regulatory dataset Off" [ref=e31]
+          - generic [ref=e32]: Show regulatory dataset
+          - generic [ref=e33]: "Off"
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - checkbox "Unidades Operativas de Planeamento e Gestão 12 features · 30-unidades-operativas-de-planeamento-e-gestao.json Off" [ref=e84]
+            - generic [ref=e86]:
+              - strong [ref=e87]: Unidades Operativas de Planeamento e Gestão
+              - generic [ref=e88]: 12 features · 30-unidades-operativas-de-planeamento-e-gestao.json
+            - generic [ref=e89]: "Off"
+          - generic [ref=e90]:
+            - checkbox "Áreas Urbanas de Génese Ilegal 93 features · 31-areas-urbanas-de-genese-ilegal.json Off" [ref=e91]
+            - generic [ref=e93]:
+              - strong [ref=e94]: Áreas Urbanas de Génese Ilegal
+              - generic [ref=e95]: 93 features · 31-areas-urbanas-de-genese-ilegal.json
+            - generic [ref=e96]: "Off"
+          - generic [ref=e97]:
+            - checkbox "Áreas de Reabilitação Urbana 25 features · 32-areas-de-reabilitacao-urbana.json Off" [ref=e98]
+            - generic [ref=e100]:
+              - strong [ref=e101]: Áreas de Reabilitação Urbana
+              - generic [ref=e102]: 25 features · 32-areas-de-reabilitacao-urbana.json
+            - generic [ref=e103]: "Off"
+    - region "Selection" [ref=e34]:
+      - generic [ref=e35]:
+        - heading "Selection" [level=2] [ref=e36]
+        - generic [ref=e37]: None
+      - generic [ref=e38]: Click a parcel or regulatory feature to inspect its attributes.
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - paragraph [ref=e42]: Source snapshot
+        - strong [ref=e43]: 4,882 parcels · 1,018 Livre · 3,864 Expectante
+        - text: Satellite + labels basemap · local cache ready
+      - generic "Map controls" [ref=e44]:
+        - generic [ref=e45] [cursor=pointer]:
+          - checkbox "Parcels" [active]
+          - generic [ref=e48]: Parcels
+        - group "Basemap mode" [ref=e49]:
+          - button "Street" [ref=e50] [cursor=pointer]
+          - button "Satellite" [pressed] [ref=e51] [cursor=pointer]
+      - generic [ref=e52]:
+        - button "Fit visible" [ref=e53] [cursor=pointer]
+        - button "Clear selection" [ref=e54] [cursor=pointer]
+      - generic "Layer color legend" [ref=e55]:
+        - generic [ref=e56]: Livre
+        - generic [ref=e58]: Expectante
+        - generic [ref=e60]: UOPG
+        - generic [ref=e62]: AUGI
+        - generic [ref=e64]: ARU
+    - generic [ref=e66]:
+      - region "Map" [ref=e104]
+      - generic:
+        - generic [ref=e105]:
+          - button "Zoom in" [ref=e106] [cursor=pointer]
+          - button "Zoom out" [ref=e108] [cursor=pointer]
+          - button "Drag to rotate map, click to reset north" [ref=e110]
+        - generic [ref=e112]: 3 km
+        - group [ref=e113]:
+          - generic "Toggle attribution" [ref=e114] [cursor=pointer]
+          - generic [ref=e115]:
+            - link "MapLibre" [ref=e134] [cursor=pointer]:
+              - /url: https://maplibre.org/
+            - text: "| Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community. | ©"
+            - link "CARTO" [ref=e135] [cursor=pointer]:
+              - /url: https://carto.com/about-carto/
+            - text: ", ©"
+            - link "OpenStreetMap" [ref=e136] [cursor=pointer]:
+              - /url: http://www.openstreetmap.org/about/
+            - text: contributors
+    - generic [ref=e152]: No layers visible

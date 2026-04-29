@@ -1,0 +1,14 @@
+[     354ms] [ERROR] Error: The layer 'parcels-fill' does not exist in the map's style and cannot be queried for features.
+    at ki.queryRenderedFeatures (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:311784)
+    at ds.queryRenderedFeatures (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:501543)
+    at ds.updateMapCursor (http://127.0.0.1:8011/source-explorer.js?v=2026-04-28-source-cache:638:24)
+    at ds.fire (http://127.0.0.1:8011/vendor/maplibre-gl.js:42:12938)
+    at ur.mousemove (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:416741)
+    at Yr.handleEvent (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:441252) @ http://127.0.0.1:8011/vendor/maplibre-gl.js:41
+[     419ms] [ERROR] Error: The layer 'parcels-fill' does not exist in the map's style and cannot be queried for features.
+    at ki.queryRenderedFeatures (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:311784)
+    at ds.queryRenderedFeatures (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:501543)
+    at ds.updateMapCursor (http://127.0.0.1:8011/source-explorer.js?v=2026-04-28-source-cache:638:24)
+    at ds.fire (http://127.0.0.1:8011/vendor/maplibre-gl.js:42:12938)
+    at ur.mousemove (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:416741)
+    at Yr.handleEvent (http://127.0.0.1:8011/vendor/maplibre-gl.js:46:441252) @ http://127.0.0.1:8011/vendor/maplibre-gl.js:41

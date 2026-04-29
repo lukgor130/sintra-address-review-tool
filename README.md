@@ -1,63 +1,158 @@
 # Sintra Address Review Tool
 
-Internal review tool for validating Sintra parcel-to-address candidate selection.
+This repository is the deployment workspace for Sintra and map-related tools that must publish only under `maps.verrio.co`.
 
-## Purpose
+It must stay separate from the main `verrio.co` website.
 
-- Load a sample of Sintra `Áreas Livres e Expectantes` parcels.
-- Compare candidate `Nº policia` addresses against the municipal basemap.
-- Review/correct gold, silver, and blue tiers.
-- Export JSON/CSV training data for the address-selection algorithm.
-- Build a pre-cached AOI parcel map for local ownership and connection research.
-- Run the AOI map from a fully local pack with no ArcGIS runtime dependency.
+## Non-Negotiable Boundaries
 
-## Refresh Sample Data
+- Never deploy this repository to `verrio.co` or `www.verrio.co`
+- Never update the main website repository from this workspace
+- Never change DNS for the root/apex Verrio website from this repo workflow
+- Prefer Cloudflare Pages or Workers over GitHub Pages
+- Prefer Option A routing:
+  - `https://maps.verrio.co/addressreview/`
+  - `https://maps.verrio.co/azenhas/`
+  - `https://maps.verrio.co/sintratotal/`
+- `https://maps.verrio.co/` itself should stay blank and reveal no public information
 
-The review page refreshes the municipal basemap token at startup. If the live
-token endpoint is unavailable and the stored token has expired, regenerate the
-sample before review.
+## Current Audit
+
+### Active App Runtime Folders
+
+- `addressreview/`
+  - Sintra address review app
+  - shared explorer assets used by `sintratotal/`
+  - source cache and AOI pack data
+- `azenhas/`
+  - local knowledge AOI app
+  - self-contained data pack and vendor assets
+- `sintratotal/`
+  - cached source explorer
+  - depends on shared explorer assets in `addressreview/`
+
+### Deployment And Infra Files
+
+- `wrangler.jsonc`
+- `functions/api/aoi.js`
+- `cloudflare/aoi-notes-schema.sql`
+- `scripts/cloudflare.py`
+- `scripts/serve_app.py`
+
+### Data Generation And Test Files
+
+- `extract_sample.py`
+- `scripts/build_aoi_pack.py`
+- `tests/test_extract_sample.py`
+
+### Legacy Or Archived Material
+
+- `archive/old-output/docs-github-pages-mirror/`
+  - duplicated static site pages from the previous GitHub Pages-style layout
+- `archive/old-output/playwright-screenshots/`
+  - generated screenshots
+- `archive/old-output/playwright-cli/`
+  - generated Playwright CLI logs and snapshots
+
+## Target Structure
+
+The repository is being normalized toward this structure:
+
+```text
+/apps
+  /addressreview
+  /azenhas
+  /sintratotal
+
+/packages
+  /shared-ui
+  /shared-data
+
+/deployments
+  dns-map.md
+  cloudflare-pages.md
+  github.md
+
+/archive
+  /old-output
+  /old-experiments
+
+/scripts
+/tests
+AGENTS.md
+README.md
+wrangler.jsonc
+```
+
+For safety, the working runtime folders remain in place for now. New work should treat `/apps` as the canonical destination for migrated app sources, while `/deployments` is the source of truth for publishing rules.
+
+`/app/` is now legacy-only. It exists solely as a redirect shim to `/addressreview/` and must not receive new code, assets, or public links.
+
+## Local Run
+
+Serve the repository root so route-based apps and Pages Functions-compatible paths are available together:
+
+```bash
+cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
+python3 scripts/serve_app.py --dir . --port 8011
+```
+
+Useful local URLs:
+
+- `http://127.0.0.1:8011/`
+- `http://127.0.0.1:8011/addressreview/`
+- `http://127.0.0.1:8011/addressreview/aoi.html`
+- `http://127.0.0.1:8011/azenhas/`
+- `http://127.0.0.1:8011/sintratotal/`
+
+Use `scripts/serve_app.py` instead of `python -m http.server` because PMTiles support needs HTTP byte-range handling.
+
+The root URL is intentionally blank. Only the documented child routes should expose app content.
+The legacy `/app/` path should only be used to verify redirects during migration.
+
+## Deployment Bundle
+
+Do not publish the raw repository root directly from Cloudflare. This repo contains local cache files that are too large for Worker asset deployment and are not needed on the public routes.
+
+Build the public deployment bundle with:
+
+```bash
+cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
+python3 scripts/build_deploy_bundle.py
+```
+
+This writes the deployable site to `deploy-root/`, including:
+
+- blank root `/`
+- `addressreview/`
+- `azenhas/`
+- `sintratotal/`
+- legacy `/app/` redirect shims
+
+The deployment bundle intentionally excludes oversized local cache files such as:
+
+- `addressreview/data/source-cache/addresses-full.json`
+- `addressreview/data/source-cache/roads-full.json`
+
+## Data Workflows
+
+Refresh the parcel sample:
 
 ```bash
 cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
 python3 extract_sample.py
 ```
 
-## Cache The Source Layers
-
-Use the cache mode to pull the full source layers locally before doing spatial
-indexing or model work:
-
-- all `Livre` and `Expectante` parcels
-- the full `Nº policia` address layer
-- the full `Ruas` road layer
-- the `Limites Regulamentares` sublayers
+Cache the full source layers:
 
 ```bash
 cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
 python3 extract_sample.py --cache-source-layers
 ```
 
-By default this writes to `app/data/source-cache/` with a manifest and one JSON
-file per source layer. Use `--cache-dir` to point the cache somewhere else.
+By default this writes to `addressreview/data/source-cache/`.
 
-## Explore The Cache
-
-Open the lightweight source explorer to browse the cached parcel and
-regulatory layers, toggle them on and off, and inspect raw feature attributes:
-
-- `http://127.0.0.1:8011/source-explorer.html`
-- `http://127.0.0.1:8011/sintratotal/`
-
-## Build An AOI Review Pack
-
-The local-knowledge mode accepts a zipped shapefile AOI and generates a fully
-local map pack:
-
-- parcel geometry and local-review metadata
-- a clipped local Protomaps basemap in `PMTiles`
-- a local satellite tile cache with labels for a second basemap mode
-- local glyph and sprite assets for labels/icons
-- a manifest the browser app can load directly
+Build an AOI pack:
 
 ```bash
 cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
@@ -67,116 +162,48 @@ pip install pyshp pyproj
 python3 scripts/build_aoi_pack.py \
   --aoi-zip "/Users/lukeg/Downloads/Azenhas AOI.zip" \
   --aoi-name "Azenhas do Mar" \
-  --output-dir app/data/pack-azenhas
+  --output-dir addressreview/data/pack-azenhas
 ```
 
-This writes a local pack under `app/data/pack-azenhas/`, including:
+## Deployment
 
-- `manifest.json`
-- `basemap.pmtiles`
-- `style.json`
-- `satellite-style.json`
-- `satellite/`
-- `aoi.geojson`
-- `parcels.geojson`
-- `assets/fonts/`
-- `assets/sprites/`
+Target deployment platform: Cloudflare Pages with Pages Functions.
 
-The satellite mode is built from public imagery tiles at pack-generation time
-and then served locally from static files, so the deployed page has no runtime
-imagery dependency.
+Working assumptions for this repo:
 
-## Shared AOI Notes
+- one Cloudflare Pages project serves `maps.verrio.co`
+- apps are exposed by route under that host
+- `/functions` provides the AOI notes API
+- the D1 binding name is `AOI_DB`
+- the root route `/` remains intentionally blank
+- Cloudflare deploys `deploy-root/`, not the raw repo root
 
-The AOI viewer now keeps parcel notes and tags in a shared Cloudflare D1
-database, while the browser still keeps a local draft cache for fast editing and
-offline recovery.
+Before deployment:
 
-What lives where:
+1. Confirm the target app and public URL in `deployments/dns-map.md`
+2. Confirm Cloudflare project details in `deployments/cloudflare-pages.md`
+3. Confirm GitHub workflow rules in `deployments/github.md`
+4. Run the local smoke test
+5. Commit with a clear message
 
-- GitHub Pages keeps the static AOI pack: manifest, parcel geometry, basemap,
-  labels, and satellite tiles.
-- Cloudflare Pages Functions serve the AOI notes API from `/api/aoi`.
-- D1 stores the mutable overlay: one shared default session per AOI pack, plus
-  optional private session links.
+## What Must Never Be Touched
 
-To enable it in Cloudflare Pages:
+- DNS for `verrio.co`
+- DNS for `www.verrio.co`
+- the `verrio` Git remote
+- the main website repository or landing page deployment
+- `CNAME` or root-domain publishing behavior without explicit instruction
+- any public landing page or app directory at `maps.verrio.co/`
+- any new code or deployment target that treats `/app/` as a primary route
 
-1. Create a D1 database.
-2. Bind it to the Pages project as `AOI_DB`.
-3. Apply [`cloudflare/aoi-notes-schema.sql`](cloudflare/aoi-notes-schema.sql).
-4. Redeploy the Pages project so `/api/aoi` is available alongside the map.
+## Key Files
 
-The viewer will fall back to the local browser draft if the API is unavailable,
-but shared edits only appear once the D1-backed API is live.
-
-## Run Locally
-
-```bash
-cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
-python3 scripts/serve_app.py --dir app --port 8011
-```
-
-Then open:
-
-- http://127.0.0.1:8011
-- http://127.0.0.1:8011/aoi.html
-
-Use `scripts/serve_app.py` instead of `python -m http.server` because PMTiles
-requires HTTP byte-range support.
-
-## Verify Deployment
-
-After pushing changes to GitHub Pages, use the live checker to confirm the
-custom domain has actually picked up the new commit:
-
-```bash
-cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
-python3 scripts/check_pages_live.py
-```
-
-The check waits for the GitHub Pages build to finish and then verifies:
-
-- the root domain stays blank
-- `/sintratotal/` serves the Sintra Total explorer
-- `/azenhas/` serves the Azenhas map
-
-## Cloudflare Control
-
-Keep the Cloudflare credentials in the ignored local file:
-
-- `.env.cloudflare.local`
-
-Use the helper to verify the token and update the `maps.verrio.co` DNS record
-from the terminal:
-
-```bash
-python3 scripts/cloudflare.py verify
-python3 scripts/cloudflare.py point-pages
-```
-
-The DNS record should stay pointed at `lukgor130.github.io` with Cloudflare
-proxying turned on so Cloudflare terminates TLS at the edge and keeps
-`maps.verrio.co` on a valid certificate.
-
-If you are using Cloudflare Pages for the map site, also make sure the Pages
-project has the D1 binding (`AOI_DB`) configured so the shared AOI notes API
-can read and write the session records.
-
-## Main Files
-
-- `extract_sample.py`
-- `app/index.html`
-- `app/aoi.html`
-- `app/styles.css`
-- `app/aoi.css`
-- `app/app.js`
-- `app/aoi.js`
-- `app/vendor/`
-- `app/data/sample.json`
-- `app/data/pack-azenhas/`
-- `cloudflare/aoi-notes-schema.sql`
+- `AGENTS.md`
+- `deployments/dns-map.md`
+- `deployments/cloudflare-pages.md`
+- `deployments/github.md`
 - `functions/api/aoi.js`
-- `scripts/build_aoi_pack.py`
+- `cloudflare/aoi-notes-schema.sql`
 - `scripts/serve_app.py`
-- `output/playwright/`
+- `scripts/build_aoi_pack.py`
+- `extract_sample.py`

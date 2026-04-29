@@ -2,119 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta http-equiv="refresh" content="0; url=/addressreview/source-explorer.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sintra Source Explorer</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23182a1f'/%3E%3Cpath d='M6 22h20' stroke='%23f5efe4' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M10 19.5L15.5 8 22 19.5' fill='none' stroke='%23d9a431' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cpath d='M11 15.8h10' stroke='%2374a07d' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"
-    />
-    <link rel="stylesheet" href="./vendor/maplibre-gl.css" />
-    <link rel="stylesheet" href="./source-explorer.css" />
+    <title>Moved to /addressreview/source-explorer.html</title>
   </head>
   <body>
-    <div class="explorer-shell">
-      <aside class="control-panel">
-        <header class="panel-header">
-          <p class="eyebrow">Cached source explorer</p>
-          <h1>Parcels and regulatory limits</h1>
-          <p class="panel-intro">
-            Explore the local cache before indexing. Toggle layers, inspect features, and verify
-            the shape of the data without hitting ArcGIS at runtime.
-          </p>
-          <div class="header-links">
-            <a href="./index.html">Back to review</a>
-            <a href="./data/source-cache/manifest.json" target="_blank" rel="noreferrer">Manifest</a>
-          </div>
-        </header>
-
-        <section class="summary-strip" id="summary-strip" aria-label="Source summary"></section>
-
-        <section class="group-stack" id="group-stack" aria-label="Layer controls">
-          <fieldset class="layer-group">
-            <legend>Parcels · Livre + Expectante</legend>
-            <div class="layer-list">
-              <div class="layer-row layer-row--static">
-                <span class="layer-swatch layer-swatch--parcel-livre" aria-hidden="true"></span>
-                <span class="layer-copy">
-                  <strong>Livre</strong>
-                  <span id="parcel-livre-count">— features</span>
-                </span>
-                <span class="state-chip">Type</span>
-              </div>
-              <div class="layer-row layer-row--static">
-                <span class="layer-swatch layer-swatch--parcel-expectante" aria-hidden="true"></span>
-                <span class="layer-copy">
-                  <strong>Expectante</strong>
-                  <span id="parcel-expectante-count">— features</span>
-                </span>
-                <span class="state-chip">Type</span>
-              </div>
-            </div>
-          </fieldset>
-
-          <fieldset class="layer-group">
-            <legend>Limites Regulamentares</legend>
-            <label class="group-toggle">
-              <input type="checkbox" id="regulatory-master-toggle" />
-              <span>Show regulatory dataset</span>
-              <span class="state-chip" id="regulatory-master-state">Off</span>
-            </label>
-            <div class="layer-list" id="regulatory-layer-list"></div>
-          </fieldset>
-        </section>
-
-        <section class="inspector" aria-labelledby="inspector-title">
-          <div class="section-head">
-            <h2 id="inspector-title">Selection</h2>
-            <span class="state-chip" id="selection-state">None</span>
-          </div>
-          <div id="selection-summary" class="selection-summary">
-            Click a parcel or regulatory feature to inspect its attributes.
-          </div>
-        </section>
-      </aside>
-
-      <main class="map-panel">
-        <div class="map-toolbar">
-          <div>
-            <p class="eyebrow">Source snapshot</p>
-            <strong id="map-title">Loading source cache</strong>
-            <span class="map-status" id="map-status">Preparing local layers</span>
-          </div>
-          <div class="toolbar-controls" aria-label="Map controls">
-            <label class="toolbar-toggle">
-              <input type="checkbox" id="parcel-visible-toggle" checked />
-              <span class="toolbar-toggle-ui">
-                <span class="toolbar-toggle-dot" aria-hidden="true"></span>
-                <span>Parcels</span>
-              </span>
-            </label>
-            <div class="segmented-control" role="group" aria-label="Basemap mode">
-              <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
-              <button type="button" data-basemap-mode="satellite" aria-pressed="false">
-                Satellite
-              </button>
-            </div>
-          </div>
-          <div class="toolbar-actions">
-            <button type="button" id="fit-visible-button">Fit visible</button>
-            <button type="button" id="clear-selection-button">Clear selection</button>
-          </div>
-          <div class="legend" aria-label="Layer color legend">
-            <span><i class="legend-swatch legend-swatch--parcel-livre"></i>Livre</span>
-            <span><i class="legend-swatch legend-swatch--parcel-expectante"></i>Expectante</span>
-            <span><i class="legend-swatch legend-swatch--uopg"></i>UOPG</span>
-            <span><i class="legend-swatch legend-swatch--augi"></i>AUGI</span>
-            <span><i class="legend-swatch legend-swatch--aru"></i>ARU</span>
-          </div>
-        </div>
-        <div id="map"></div>
-      </main>
-    </div>
-
-    <script src="./vendor/maplibre-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/proj4@2.20.2/dist/proj4.min.js"></script>
-    <script type="module" src="./source-explorer.js?v=2026-04-29-parcel-basemap-toggles"></script>
+    <p>
+      This route moved to
+      <a href="/addressreview/source-explorer.html">/addressreview/source-explorer.html</a>.
+    </p>
   </body>
 </html>

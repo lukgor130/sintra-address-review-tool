@@ -414,7 +414,7 @@ def main() -> None:
 
     extract_basemap(build["key"], view["bbox"], output_dir / "basemap.pmtiles", args.maxzoom)
     download_pack_assets(output_dir)
-    download_vendor_assets(Path("app/vendor"))
+    download_vendor_assets(Path("addressreview/vendor"))
 
     print(f"Wrote offline pack to {output_dir}")
 

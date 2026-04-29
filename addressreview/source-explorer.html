@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sintra Total Explorer</title>
+    <title>Sintra Source Explorer</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23182a1f'/%3E%3Cpath d='M6 22h20' stroke='%23f5efe4' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M10 19.5L15.5 8 22 19.5' fill='none' stroke='%23d9a431' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cpath d='M11 15.8h10' stroke='%2374a07d' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="../addressreview/vendor/maplibre-gl.css" />
-    <link rel="stylesheet" href="../addressreview/source-explorer.css" />
+    <link rel="stylesheet" href="./vendor/maplibre-gl.css" />
+    <link rel="stylesheet" href="./source-explorer.css" />
   </head>
   <body>
     <div class="explorer-shell">
@@ -23,8 +23,8 @@
             the shape of the data without hitting ArcGIS at runtime.
           </p>
           <div class="header-links">
-            <a href="../index.html">Back to review</a>
-            <a href="../addressreview/data/source-cache/manifest.json" target="_blank" rel="noreferrer">Manifest</a>
+            <a href="./index.html">Back to review</a>
+            <a href="./data/source-cache/manifest.json" target="_blank" rel="noreferrer">Manifest</a>
           </div>
         </header>
 
@@ -33,30 +33,23 @@
         <section class="group-stack" id="group-stack" aria-label="Layer controls">
           <fieldset class="layer-group">
             <legend>Parcels · Livre + Expectante</legend>
-            <label class="group-toggle">
-              <input type="checkbox" id="parcels-master-toggle" checked />
-              <span>Show parcel dataset</span>
-              <span class="state-chip" id="parcels-master-state">On</span>
-            </label>
             <div class="layer-list">
-              <label class="layer-row">
-                <input type="checkbox" id="parcels-fill-toggle" checked />
-                <span class="layer-swatch layer-swatch--parcel-fill" aria-hidden="true"></span>
+              <div class="layer-row layer-row--static">
+                <span class="layer-swatch layer-swatch--parcel-livre" aria-hidden="true"></span>
                 <span class="layer-copy">
-                  <strong>Parcel fill</strong>
-                  <span>Area surface for the full parcel universe.</span>
+                  <strong>Livre</strong>
+                  <span id="parcel-livre-count">— features</span>
                 </span>
-                <span class="state-chip" id="parcels-fill-state">On</span>
-              </label>
-              <label class="layer-row">
-                <input type="checkbox" id="parcels-outline-toggle" checked />
-                <span class="layer-swatch layer-swatch--parcel-outline" aria-hidden="true"></span>
+                <span class="state-chip">Type</span>
+              </div>
+              <div class="layer-row layer-row--static">
+                <span class="layer-swatch layer-swatch--parcel-expectante" aria-hidden="true"></span>
                 <span class="layer-copy">
-                  <strong>Parcel outline</strong>
-                  <span>Thin boundary line for shape and adjacency checks.</span>
+                  <strong>Expectante</strong>
+                  <span id="parcel-expectante-count">— features</span>
                 </span>
-                <span class="state-chip" id="parcels-outline-state">On</span>
-              </label>
+                <span class="state-chip">Type</span>
+              </div>
             </div>
           </fieldset>
 
@@ -89,12 +82,28 @@
             <strong id="map-title">Loading source cache</strong>
             <span class="map-status" id="map-status">Preparing local layers</span>
           </div>
+          <div class="toolbar-controls" aria-label="Map controls">
+            <label class="toolbar-toggle">
+              <input type="checkbox" id="parcel-visible-toggle" checked />
+              <span class="toolbar-toggle-ui">
+                <span class="toolbar-toggle-dot" aria-hidden="true"></span>
+                <span>Parcels</span>
+              </span>
+            </label>
+            <div class="segmented-control" role="group" aria-label="Basemap mode">
+              <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
+              <button type="button" data-basemap-mode="satellite" aria-pressed="false">
+                Satellite
+              </button>
+            </div>
+          </div>
           <div class="toolbar-actions">
             <button type="button" id="fit-visible-button">Fit visible</button>
             <button type="button" id="clear-selection-button">Clear selection</button>
           </div>
           <div class="legend" aria-label="Layer color legend">
-            <span><i class="legend-swatch legend-swatch--parcel"></i>Parcels</span>
+            <span><i class="legend-swatch legend-swatch--parcel-livre"></i>Livre</span>
+            <span><i class="legend-swatch legend-swatch--parcel-expectante"></i>Expectante</span>
             <span><i class="legend-swatch legend-swatch--uopg"></i>UOPG</span>
             <span><i class="legend-swatch legend-swatch--augi"></i>AUGI</span>
             <span><i class="legend-swatch legend-swatch--aru"></i>ARU</span>
@@ -104,11 +113,8 @@
       </main>
     </div>
 
-    <script src="../addressreview/vendor/maplibre-gl.js"></script>
+    <script src="./vendor/maplibre-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/proj4@2.20.2/dist/proj4.min.js"></script>
-    <script
-      type="module"
-      src="../addressreview/source-explorer.js?v=2026-04-29-projection-fix"
-    ></script>
+    <script type="module" src="./source-explorer.js?v=2026-04-29-parcel-basemap-toggles"></script>
   </body>
 </html>

@@ -5,6 +5,11 @@ __pycache__/
 .env.local
 .env.cloudflare.local
 node_modules/
+.venv-aoi/
+.playwright-cli/
+output/
+.npm-cache/
+deploy-root/
 
 # wrangler files
 .wrangler

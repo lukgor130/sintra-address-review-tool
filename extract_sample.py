@@ -18,7 +18,7 @@ BASE_URL = "https://sig.cm-sintra.pt"
 OUTPUT_DIR = os.path.join(
     "/Users/lukeg/Documents/Personal Projects",
     "sintra-address-review-tool",
-    "app",
+    "addressreview",
     "data",
 )
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "sample.json")

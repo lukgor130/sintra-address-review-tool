@@ -1,0 +1,93 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Local Knowledge Review
+      - heading "Area of interest" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Use the map with someone who knows the area well, mark what they know about each plot, and export a clean outreach lead sheet afterwards.
+    - region "Review progress" [ref=e8]
+    - region "Field view controls" [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - paragraph [ref=e12]: Field view
+          - strong [ref=e13]: Loading map
+          - generic [ref=e14]: Offline pack
+        - tablist "Basemap style" [ref=e15]:
+          - button "Street" [pressed] [ref=e16] [cursor=pointer]
+          - button "Satellite" [ref=e17] [cursor=pointer]
+        - generic "Knowledge status legend" [ref=e18]:
+          - generic [ref=e19]: Owner
+          - generic [ref=e21]: Linked
+          - generic [ref=e23]: Maybe
+          - generic [ref=e25]: Open
+          - generic [ref=e27]: No lead
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]: Search plots
+        - searchbox "Search plots" [ref=e32]
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e35]: Filter
+          - combobox "Filter" [ref=e36] [cursor=pointer]:
+            - option "All plots" [selected]
+            - option "Actionable leads"
+            - option "Still open"
+            - option "No local lead"
+        - generic [ref=e37]:
+          - generic [ref=e38]: Sort
+          - combobox "Sort" [ref=e39] [cursor=pointer]:
+            - option "By status" [selected]
+            - option "By parcel ID"
+            - option "By area"
+    - heading "Plots in view" [level=2] [ref=e42]
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - heading "Session" [level=2] [ref=e46]
+        - generic [ref=e47]: Loading
+      - paragraph [ref=e48]: Shared notes from this AOI load for everyone. Open the same link on another device to continue the same review.
+      - generic [ref=e49]:
+        - button "Copy link" [ref=e50] [cursor=pointer]
+        - button "New session" [ref=e51] [cursor=pointer]
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - paragraph [ref=e54]: Export
+        - strong [ref=e55]: No saved notes yet
+      - generic [ref=e56]:
+        - button "Export JSON" [ref=e57] [cursor=pointer]
+        - button "Export CSV" [ref=e58] [cursor=pointer]
+        - button "Reset local cache" [ref=e59] [cursor=pointer]
+  - main [ref=e60]
+  - generic [ref=e63]:
+    - generic [ref=e65]:
+      - paragraph [ref=e66]: Live review
+      - heading "Select a plot" [level=2] [ref=e67]
+    - generic [ref=e70]:
+      - generic [ref=e71]:
+        - generic [ref=e72]: What does the local contact know?
+        - generic [ref=e73]:
+          - button "Knows owner" [ref=e74] [cursor=pointer]
+          - button "Knows someone linked" [ref=e75] [cursor=pointer]
+          - button "Possible lead" [ref=e76] [cursor=pointer]
+          - button "Needs research" [ref=e77] [cursor=pointer]
+          - button "No lead" [ref=e78] [cursor=pointer]
+      - generic [ref=e79]:
+        - generic [ref=e80]: Lead name or owner clue
+        - textbox "Lead name or owner clue" [ref=e81]:
+          - /placeholder: Person, family name, business, or landmark clue
+      - generic [ref=e82]:
+        - generic [ref=e83]: How do we reach or verify this lead?
+        - textbox "How do we reach or verify this lead?" [ref=e84]:
+          - /placeholder: Neighbour, café owner, WhatsApp, old owner, local broker...
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - generic [ref=e87]: Confidence
+        - generic [ref=e88]:
+          - button "High" [ref=e89] [cursor=pointer]
+          - button "Medium" [ref=e90] [cursor=pointer]
+          - button "Low" [ref=e91] [cursor=pointer]
+      - generic [ref=e92]:
+        - generic [ref=e93]: Notes
+        - textbox "Notes" [ref=e94]:
+          - /placeholder: "Anything useful: local nickname, family link, whether the plot feels abandoned, likely gatekeeper..."
+      - generic [ref=e95]:
+        - button "Previous" [ref=e96] [cursor=pointer]
+        - button "Save and next" [ref=e97] [cursor=pointer]

@@ -1,0 +1,59 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Cached source explorer
+      - heading "Parcels and regulatory limits" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Explore the local cache before indexing. Toggle layers, inspect features, and verify the shape of the data without hitting ArcGIS at runtime.
+      - generic [ref=e8]:
+        - link "Back to review" [ref=e9] [cursor=pointer]:
+          - /url: ./index.html
+        - link "Manifest" [ref=e10] [cursor=pointer]:
+          - /url: ./data/source-cache/manifest.json
+    - region "Source summary" [ref=e11]
+    - region "Layer controls" [ref=e12]:
+      - group "Parcels · Livre + Expectante" [ref=e13]:
+        - generic [ref=e14]: Parcels · Livre + Expectante
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e18]:
+              - strong [ref=e19]: Livre
+              - generic [ref=e20]: — features
+            - generic [ref=e21]: Type
+          - generic [ref=e22]:
+            - generic [ref=e24]:
+              - strong [ref=e25]: Expectante
+              - generic [ref=e26]: — features
+            - generic [ref=e27]: Type
+      - group "Limites Regulamentares" [ref=e28]:
+        - generic [ref=e29]: Limites Regulamentares
+        - generic [ref=e30]:
+          - checkbox "Show regulatory dataset Off" [ref=e31]
+          - generic [ref=e32]: Show regulatory dataset
+          - generic [ref=e33]: "Off"
+    - region "Selection" [ref=e34]:
+      - generic [ref=e35]:
+        - heading "Selection" [level=2] [ref=e36]
+        - generic [ref=e37]: None
+      - generic [ref=e38]: Click a parcel or regulatory feature to inspect its attributes.
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - paragraph [ref=e42]: Source snapshot
+        - strong [ref=e43]: Loading source cache
+        - text: Preparing local layers
+      - generic "Map controls" [ref=e44]:
+        - generic [ref=e45] [cursor=pointer]:
+          - checkbox "Parcels" [checked]
+          - generic [ref=e48]: Parcels
+        - group "Basemap mode" [ref=e49]:
+          - button "Street" [pressed] [ref=e50] [cursor=pointer]
+          - button "Satellite" [ref=e51] [cursor=pointer]
+      - generic [ref=e52]:
+        - button "Fit visible" [ref=e53] [cursor=pointer]
+        - button "Clear selection" [ref=e54] [cursor=pointer]
+      - generic "Layer color legend" [ref=e55]:
+        - generic [ref=e56]: Livre
+        - generic [ref=e58]: Expectante
+        - generic [ref=e60]: UOPG
+        - generic [ref=e62]: AUGI
+        - generic [ref=e64]: ARU

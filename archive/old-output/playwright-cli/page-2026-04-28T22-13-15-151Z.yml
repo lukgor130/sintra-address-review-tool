@@ -1,0 +1,94 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Cached source explorer
+      - heading "Parcels and regulatory limits" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Explore the local cache before indexing. Toggle layers, inspect features, and verify the shape of the data without hitting ArcGIS at runtime.
+      - generic [ref=e8]:
+        - link "Back to review" [ref=e9] [cursor=pointer]:
+          - /url: ./index.html
+        - link "Manifest" [ref=e10] [cursor=pointer]:
+          - /url: ./data/source-cache/manifest.json
+    - region "Source summary" [ref=e11]:
+      - generic [ref=e105]:
+        - generic [ref=e106]: Parcels
+        - strong [ref=e107]: 4,882
+      - generic [ref=e108]:
+        - generic [ref=e109]: Regulatory
+        - strong [ref=e110]: "130"
+      - generic [ref=e111]:
+        - generic [ref=e112]: Visible layers
+        - strong [ref=e113]: "8"
+      - generic [ref=e114]:
+        - generic [ref=e115]: Snapshot
+        - strong [ref=e116]: 4/28/2026
+    - region "Layer controls" [ref=e24]:
+      - group "Parcels · Livre + Expectante" [ref=e25]:
+        - generic [ref=e26]: Parcels · Livre + Expectante
+        - generic [ref=e27]:
+          - checkbox "Show parcel dataset On" [checked] [ref=e28]
+          - generic [ref=e29]: Show parcel dataset
+          - generic [ref=e30]: "On"
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - checkbox "Parcel fill Area surface for the full parcel universe. On" [checked] [ref=e33]
+            - generic [ref=e35]:
+              - strong [ref=e36]: Parcel fill
+              - generic [ref=e37]: Area surface for the full parcel universe.
+            - generic [ref=e38]: "On"
+          - generic [ref=e39]:
+            - checkbox "Parcel outline Thin boundary line for shape and adjacency checks. On" [checked] [ref=e40]
+            - generic [ref=e42]:
+              - strong [ref=e43]: Parcel outline
+              - generic [ref=e44]: Thin boundary line for shape and adjacency checks.
+            - generic [ref=e45]: "On"
+      - group "Limites Regulamentares" [ref=e46]:
+        - generic [ref=e47]: Limites Regulamentares
+        - generic [ref=e48]:
+          - checkbox "Show regulatory dataset On" [checked] [active] [ref=e117]
+          - generic [ref=e50]: Show regulatory dataset
+          - generic [ref=e51]: "On"
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - checkbox "Unidades Operativas de Planeamento e Gestão 12 features · 30-unidades-operativas-de-planeamento-e-gestao.json On" [checked] [ref=e118]
+            - generic [ref=e56]:
+              - strong [ref=e57]: Unidades Operativas de Planeamento e Gestão
+              - generic [ref=e58]: 12 features · 30-unidades-operativas-de-planeamento-e-gestao.json
+            - generic [ref=e59]: "On"
+          - generic [ref=e60]:
+            - checkbox "Áreas Urbanas de Génese Ilegal 93 features · 31-areas-urbanas-de-genese-ilegal.json On" [checked] [ref=e119]
+            - generic [ref=e63]:
+              - strong [ref=e64]: Áreas Urbanas de Génese Ilegal
+              - generic [ref=e65]: 93 features · 31-areas-urbanas-de-genese-ilegal.json
+            - generic [ref=e66]: "On"
+          - generic [ref=e67]:
+            - checkbox "Áreas de Reabilitação Urbana 25 features · 32-areas-de-reabilitacao-urbana.json On" [checked] [ref=e120]
+            - generic [ref=e70]:
+              - strong [ref=e71]: Áreas de Reabilitação Urbana
+              - generic [ref=e72]: 25 features · 32-areas-de-reabilitacao-urbana.json
+            - generic [ref=e73]: "On"
+    - region "Selection" [ref=e74]:
+      - generic [ref=e75]:
+        - heading "Selection" [level=2] [ref=e76]
+        - generic [ref=e77]: None
+      - generic [ref=e78]: Click a parcel or regulatory feature to inspect its attributes.
+  - main [ref=e79]:
+    - generic [ref=e80]:
+      - generic [ref=e81]:
+        - paragraph [ref=e82]: Source snapshot
+        - strong [ref=e83]: 4,882 parcels, 130 regulatory features
+        - text: Local layers ready
+      - generic [ref=e84]:
+        - button "Fit visible" [ref=e85] [cursor=pointer]
+        - button "Clear selection" [ref=e86] [cursor=pointer]
+      - generic "Layer color legend" [ref=e87]:
+        - generic [ref=e88]: Parcels
+        - generic [ref=e90]: UOPG
+        - generic [ref=e92]: AUGI
+        - generic [ref=e94]: ARU
+    - generic [ref=e96]:
+      - region "Map" [ref=e97]
+      - generic [ref=e98]:
+        - button "Zoom in" [ref=e99] [cursor=pointer]
+        - button "Zoom out" [ref=e101] [cursor=pointer]
+        - button "Drag to rotate map, click to reset north" [ref=e103]

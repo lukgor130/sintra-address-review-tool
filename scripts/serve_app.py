@@ -317,12 +317,12 @@ class RangeRequestHandler(SimpleHTTPRequestHandler):
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Serve the app with byte-range support.")
+    parser = argparse.ArgumentParser(description="Serve the workspace with byte-range support.")
     parser.add_argument("--port", type=int, default=8011, help="Port to bind.")
     parser.add_argument(
         "--dir",
-        default="app",
-        help="Directory to serve. Defaults to ./app",
+        default=".",
+        help="Directory to serve. Defaults to the repository root.",
     )
     return parser.parse_args()
 
