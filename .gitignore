@@ -3,4 +3,5 @@ __pycache__/
 *.pyc
 .env
 .env.local
+.env.cloudflare.local
 node_modules/

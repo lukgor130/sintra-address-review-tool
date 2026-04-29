@@ -117,6 +117,23 @@ The check waits for the GitHub Pages build to finish and then verifies:
 - `/sintratotal/` serves the Sintra Total explorer
 - `/azenhas/` serves the Azenhas map
 
+## Cloudflare Control
+
+Keep the Cloudflare credentials in the ignored local file:
+
+- `.env.cloudflare.local`
+
+Use the helper to verify the token and update the `maps.verrio.co` DNS record
+from the terminal:
+
+```bash
+python3 scripts/cloudflare.py verify
+python3 scripts/cloudflare.py point-pages
+```
+
+The DNS record should stay pointed at `lukgor130.github.io` with Cloudflare
+proxying turned off so GitHub Pages is the source of truth.
+
 ## Main Files
 
 - `extract_sample.py`
