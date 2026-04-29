@@ -40,7 +40,12 @@ const basemapModeLabel = {
 };
 let basemapMode = basemapStyles[basemapStyleKey] ? basemapStyleKey : "street";
 
-const STORAGE_KEY = `sintra-aoi-feedback-v2:${manifest.name}`;
+const PACK_ID = slugify(manifest.name);
+const STORAGE_VERSION = 3;
+const STORAGE_KEY = `sintra-aoi-feedback-v${STORAGE_VERSION}:${PACK_ID}:shared`;
+const SESSION_STORAGE_KEY = `sintra-aoi-session-v${STORAGE_VERSION}:${PACK_ID}`;
+const API_BASE = "/api/aoi";
+const URL_SESSION_ID = params.get("session") ?? "";
 
 const STATUS_LABELS = {
   unknown: "Open",
@@ -84,15 +89,36 @@ const exportCsvEl = document.querySelector("#export-csv");
 const clearFeedbackEl = document.querySelector("#clear-feedback");
 const mapTitleEl = document.querySelector("#map-title");
 const basemapStatusEl = document.querySelector("#basemap-status");
+const sessionStateEl = document.querySelector("#session-state");
+const sessionDescriptionEl = document.querySelector("#session-description");
+const copySessionLinkEl = document.querySelector("#copy-session-link");
+const newSessionEl = document.querySelector("#new-session");
+const syncStateEl = document.querySelector("#save-state");
+const editorTitleEl = document.querySelector("#parcel-title");
+const editorPositionEl = document.querySelector("#parcel-position");
+const editorSummaryEl = document.querySelector("#parcel-summary");
 
 datasetTitleEl.textContent = manifest.name;
-datasetDescriptionEl.textContent = `${manifest.parcelCount} plots in this local map pack. The basemap, labels, parcel geometry, and review data all load from local files.`;
+datasetDescriptionEl.textContent = `${manifest.parcelCount} plots in this local map pack. The basemap, labels, parcel geometry, and review notes load locally, with shared notes syncing through Cloudflare when available.`;
 basemapStatusEl.hidden = false;
 basemapStatusEl.textContent =
   basemapMode === "satellite" ? `${basemapModeLabel.satellite} + labels` : `${basemapModeLabel.street} basemap`;
 
+function slugify(value) {
+  return String(value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
 function normalizeText(value) {
   return String(value ?? "").trim().toLowerCase();
+}
+
+function nowIso() {
+  return new Date().toISOString();
 }
 
 function escapeHtml(value) {
@@ -104,20 +130,92 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function loadFeedback() {
-  const fallback = { version: 2, parcels: {}, createdAt: new Date().toISOString() };
+function createEmptyFeedback() {
+  return {
+    version: STORAGE_VERSION,
+    packId: PACK_ID,
+    sessionId: "",
+    createdAt: nowIso(),
+    updatedAt: null,
+    syncedAt: null,
+    parcels: {},
+  };
+}
+
+function loadFeedback(storageKey = STORAGE_KEY) {
+  const fallback = createEmptyFeedback();
   try {
-    return { ...fallback, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+    const parsed = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    return {
+      ...fallback,
+      ...parsed,
+      parcels: parsed?.parcels && typeof parsed.parcels === "object" ? parsed.parcels : {},
+    };
   } catch {
     return fallback;
   }
 }
 
-let feedback = loadFeedback();
+function persistFeedback(storageKey = STORAGE_KEY) {
+  feedback.updatedAt = nowIso();
+  feedback.packId = PACK_ID;
+  feedback.sessionId = sessionState.id ?? feedback.sessionId ?? "";
+  localStorage.setItem(storageKey, JSON.stringify(feedback, null, 2));
+}
 
-function saveFeedback() {
-  feedback.updatedAt = new Date().toISOString();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(feedback, null, 2));
+function sessionStorageKey(sessionId, isDefault = false) {
+  if (isDefault || !sessionId) {
+    return STORAGE_KEY;
+  }
+  return `sintra-aoi-feedback-v${STORAGE_VERSION}:${PACK_ID}:${sessionId}`;
+}
+
+let sessionState = {
+  id: URL_SESSION_ID || "",
+  slug: URL_SESSION_ID || "default",
+  packId: PACK_ID,
+  title: manifest.name,
+  isDefault: !URL_SESSION_ID,
+  createdAt: null,
+  updatedAt: null,
+};
+
+let activeStorageKey = sessionStorageKey(sessionState.id);
+let feedback = loadFeedback(activeStorageKey);
+
+function setStorageKey(sessionId, isDefault = false) {
+  activeStorageKey = sessionStorageKey(sessionId, isDefault);
+  feedback = loadFeedback(activeStorageKey);
+}
+
+function persistSessionPointer(sessionId) {
+  if (sessionId) {
+    localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+  }
+}
+
+function setSyncState(mode, detail) {
+  syncState = { mode, detail };
+  syncStateEl.textContent = detail;
+  syncStateEl.dataset.syncState = mode;
+}
+
+let syncState = {
+  mode: "loading",
+  detail: "Loading shared session…",
+};
+
+let pendingParcelIds = new Set();
+let syncTimer = null;
+let syncInFlight = false;
+
+function saveFeedback({ queueSync = true } = {}) {
+  feedback.packId = PACK_ID;
+  feedback.sessionId = sessionState.id ?? feedback.sessionId ?? "";
+  persistFeedback(activeStorageKey);
+  if (queueSync) {
+    queueParcelSync(activeParcelId);
+  }
 }
 
 const parcels = parcelsGeojson.features.map((feature) => ({
@@ -126,10 +224,195 @@ const parcels = parcelsGeojson.features.map((feature) => ({
   geometry: feature.geometry,
 }));
 
+const parcelsById = new Map(parcels.map((parcel) => [parcel.objectId, parcel]));
+
 let activeParcelId = parcels[0]?.objectId ?? null;
 let mapLoaded = false;
 let initialViewportApplied = false;
 const BASEMAP_STORAGE_KEY = `sintra-aoi-basemap-mode:${manifest.name}`;
+
+function apiUrl(action) {
+  const url = new URL(API_BASE, globalThis.location.origin);
+  url.searchParams.set("action", action);
+  url.searchParams.set("packId", PACK_ID);
+  return url;
+}
+
+async function apiJson(action, { method = "GET", body } = {}) {
+  const response = await fetch(apiUrl(action), {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`${response.status} ${response.statusText}${text ? `: ${text}` : ""}`);
+  }
+  return response.json();
+}
+
+function setSessionState(nextSession, { persistPointer = true } = {}) {
+  sessionState = {
+    ...sessionState,
+    ...nextSession,
+    packId: PACK_ID,
+  };
+  if (persistPointer) {
+    persistSessionPointer(sessionState.id);
+  }
+  setStorageKey(sessionState.id || "", sessionState.isDefault);
+  feedback.sessionId = sessionState.id ?? "";
+  feedback.packId = PACK_ID;
+}
+
+function normalizeParcelFeedback(data, parcel) {
+  const parcelObjectId = Number(data?.parcelObjectId ?? parcel?.objectId ?? data?.sourceObjectId ?? 0);
+  return {
+    sourceObjectId: Number(data?.sourceObjectId ?? parcel?.sourceObjectId ?? parcelObjectId),
+    parcelObjectId,
+    knowledgeStatus: String(data?.knowledgeStatus ?? ""),
+    leadName: String(data?.leadName ?? ""),
+    contactTrail: String(data?.contactTrail ?? ""),
+    confidence: String(data?.confidence ?? ""),
+    notes: String(data?.notes ?? ""),
+    reviewedAt: data?.reviewedAt ? String(data.reviewedAt) : null,
+    updatedAt: data?.updatedAt ? String(data.updatedAt) : null,
+    dirty: Boolean(data?.dirty),
+  };
+}
+
+function parcelIdFromFeedbackKey(key) {
+  const id = Number(key);
+  return Number.isFinite(id) ? id : key;
+}
+
+function hydrateRemoteFeedback(rows) {
+  if (!rows || typeof rows !== "object") {
+    return;
+  }
+  for (const [key, value] of Object.entries(rows)) {
+    const parcel = parcelsById.get(parcelIdFromFeedbackKey(key));
+    const normalized = normalizeParcelFeedback(value, parcel);
+    const local = feedback.parcels[String(normalized.sourceObjectId)] ?? feedback.parcels[String(normalized.parcelObjectId)];
+    if (local?.dirty && (!normalized.updatedAt || (local.updatedAt ?? "") >= normalized.updatedAt)) {
+      continue;
+    }
+    feedback.parcels[String(normalized.sourceObjectId)] = normalized;
+  }
+}
+
+function serializeParcelFeedback(fb, parcel) {
+  const sourceObjectId = Number(fb?.sourceObjectId ?? parcel?.sourceObjectId ?? parcel?.objectId);
+  return {
+    sourceObjectId,
+    parcelObjectId: Number(fb?.parcelObjectId ?? parcel?.objectId ?? sourceObjectId),
+    knowledgeStatus: String(fb?.knowledgeStatus ?? ""),
+    leadName: String(fb?.leadName ?? ""),
+    contactTrail: String(fb?.contactTrail ?? ""),
+    confidence: String(fb?.confidence ?? ""),
+    notes: String(fb?.notes ?? ""),
+    reviewedAt: fb?.reviewedAt ?? null,
+    updatedAt: fb?.updatedAt ?? null,
+  };
+}
+
+function buildSessionLink(sessionId) {
+  const url = new URL(globalThis.location.href);
+  if (sessionId) {
+    url.searchParams.set("session", sessionId);
+  } else {
+    url.searchParams.delete("session");
+  }
+  return url.toString();
+}
+
+function updateLocationForSession(sessionId) {
+  const nextUrl = new URL(globalThis.location.href);
+  if (sessionId) {
+    nextUrl.searchParams.set("session", sessionId);
+  } else {
+    nextUrl.searchParams.delete("session");
+  }
+  globalThis.history.replaceState({}, "", nextUrl);
+}
+
+async function bootstrapSession() {
+  try {
+    setSyncState("loading", "Loading shared session…");
+    const payload = await apiJson("bootstrap", {
+      method: "POST",
+      body: {
+        sessionId: URL_SESSION_ID || undefined,
+        packId: PACK_ID,
+      },
+    });
+    setSessionState(
+      {
+        id: payload?.session?.id ?? sessionState.id ?? "",
+        slug: payload?.session?.slug ?? sessionState.slug,
+        title: payload?.session?.title ?? manifest.name,
+        isDefault: Boolean(payload?.session?.isDefault ?? payload?.session?.is_default ?? !URL_SESSION_ID),
+        createdAt: payload?.session?.createdAt ?? payload?.session?.created_at ?? null,
+        updatedAt: payload?.session?.updatedAt ?? payload?.session?.updated_at ?? null,
+      },
+      { persistPointer: false },
+    );
+    hydrateRemoteFeedback(payload?.feedback?.parcels ?? payload?.feedback ?? payload?.parcels ?? {});
+    feedback.syncedAt = payload?.session?.updatedAt ?? payload?.session?.updated_at ?? nowIso();
+    pendingParcelIds = new Set(
+      Object.entries(feedback.parcels)
+        .filter(([, item]) => item?.dirty)
+        .map(([key]) => key),
+    );
+    persistFeedback(activeStorageKey);
+    updateLocationForSession(URL_SESSION_ID || (sessionState.isDefault ? "" : sessionState.id));
+    renderAll();
+    if (pendingParcelIds.size) {
+      scheduleParcelSync();
+    } else {
+      setSyncState(
+        "synced",
+        sessionState.isDefault
+          ? `Synced shared notes · ${new Date(feedback.syncedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+          : "Synced private session.",
+      );
+    }
+  } catch (error) {
+    console.warn("AOI session bootstrap failed", error);
+    setSyncState("offline", "Offline. Using the local draft cache.");
+    renderAll();
+  }
+}
+
+async function createPrivateSession() {
+  const payload = await apiJson("create-session", {
+    method: "POST",
+    body: {
+      packId: PACK_ID,
+      title: manifest.name,
+      cloneFromSessionId: sessionState.id || undefined,
+    },
+  });
+  setSessionState(
+    {
+      id: payload?.session?.id ?? "",
+      slug: payload?.session?.slug ?? payload?.session?.id ?? "",
+      title: payload?.session?.title ?? `${manifest.name} session`,
+      isDefault: false,
+      createdAt: payload?.session?.createdAt ?? null,
+      updatedAt: payload?.session?.updatedAt ?? null,
+    },
+    { persistPointer: true },
+  );
+  pendingParcelIds = new Set();
+  feedback = loadFeedback(activeStorageKey);
+  hydrateRemoteFeedback(payload?.feedback?.parcels ?? payload?.feedback ?? payload?.parcels ?? {});
+  persistFeedback(activeStorageKey);
+  updateLocationForSession(sessionState.id);
+  setSyncState("synced", "Synced private session.");
+  renderAll();
+}
 
 function cloneStyle(styleObject) {
   return JSON.parse(JSON.stringify(styleObject));
@@ -140,7 +423,9 @@ function prepareStyle(styleObject) {
   next.glyphs = `${packBaseUrl.href}assets/fonts/{fontstack}/{range}.pbf`;
   next.sprite = new URL("assets/sprites/v4/light", packBaseUrl).href;
   if (next.sources?.satellite?.tiles?.length) {
-    next.sources.satellite.tiles = [`${packBaseUrl.href}satellite/{z}/{x}/{y}.jpg`];
+    next.sources.satellite.tiles = [
+      `${packBaseUrl.href}satellite/{z}/{x}/{y}.jpg`,
+    ];
   }
   return next;
 }
@@ -160,6 +445,8 @@ function getParcelFeedback(parcel) {
     confidence: "",
     notes: "",
     reviewedAt: null,
+    updatedAt: null,
+    dirty: false,
   };
   return feedback.parcels[key];
 }
@@ -182,6 +469,109 @@ function parcelWasTouched(parcel) {
       item.confidence ||
       item.notes.trim(),
   );
+}
+
+function markParcelDirty(parcel) {
+  const item = getParcelFeedback(parcel);
+  item.updatedAt = nowIso();
+  item.dirty = true;
+  pendingParcelIds.add(String(parcel.sourceObjectId));
+  feedback.syncedAt = null;
+}
+
+function queueParcelSync(parcelId) {
+  if (parcelId == null) {
+    return;
+  }
+  const parcel = parcelsById.get(Number(parcelId));
+  if (!parcel) {
+    return;
+  }
+  markParcelDirty(parcel);
+  persistFeedback(activeStorageKey);
+  scheduleParcelSync();
+}
+
+function scheduleParcelSync() {
+  clearTimeout(syncTimer);
+  if (!navigator.onLine) {
+    setSyncState("offline", "Offline. Changes are stored locally.");
+    return;
+  }
+  if (!pendingParcelIds.size) {
+    setSyncState("synced", sessionState.id ? "Synced with shared session." : "Working locally.");
+    return;
+  }
+  setSyncState("saving", `Saving ${pendingParcelIds.size} change${pendingParcelIds.size === 1 ? "" : "s"}…`);
+  void flushParcelSync();
+}
+
+async function flushParcelSync() {
+  if (syncInFlight || !pendingParcelIds.size) {
+    return;
+  }
+  if (!navigator.onLine) {
+    setSyncState("offline", "Offline. Changes are stored locally.");
+    return;
+  }
+  if (!sessionState.id) {
+    setSyncState("offline", "Waiting for session sync…");
+    return;
+  }
+
+  syncInFlight = true;
+  const parcelIds = [...pendingParcelIds];
+  const rows = parcelIds
+    .map((id) => parcelsById.get(Number(id)))
+    .filter(Boolean)
+    .map((parcel) => {
+      const item = getParcelFeedback(parcel);
+      return {
+        parcelId: parcel.sourceObjectId,
+        feedback: serializeParcelFeedback(item, parcel),
+      };
+    });
+
+  if (!rows.length) {
+    syncInFlight = false;
+    pendingParcelIds.clear();
+    setSyncState("synced", "Synced with shared session.");
+    return;
+  }
+
+  try {
+    const payload = await apiJson("upsert", {
+      method: "POST",
+      body: {
+        sessionId: sessionState.id,
+        packId: PACK_ID,
+        rows,
+      },
+    });
+    const returnedRows = payload?.feedback?.parcels ?? payload?.parcels ?? {};
+    hydrateRemoteFeedback(returnedRows);
+    for (const row of rows) {
+      const item = feedback.parcels[String(row.parcelId)];
+      if (item) {
+        item.dirty = false;
+        item.updatedAt = payload?.syncedAt ?? nowIso();
+      }
+      pendingParcelIds.delete(String(row.parcelId));
+    }
+    feedback.syncedAt = payload?.syncedAt ?? nowIso();
+    persistFeedback(activeStorageKey);
+    setSyncState("synced", `Synced ${new Date(feedback.syncedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
+  } catch (error) {
+    console.warn("AOI note sync failed", error);
+    setSyncState("offline", "Offline. Changes are stored locally.");
+    return;
+  } finally {
+    syncInFlight = false;
+  }
+
+  if (pendingParcelIds.size) {
+    scheduleParcelSync();
+  }
 }
 
 function visibleParcels() {
@@ -305,9 +695,25 @@ function renderMetrics() {
     )
     .join("");
 
-  saveStateEl.textContent = feedback.updatedAt
-    ? `Saved ${new Date(feedback.updatedAt).toLocaleString()}`
-    : "No saved notes yet";
+  syncStateEl.textContent = syncState.detail;
+}
+
+function renderSessionPanel() {
+  if (!sessionState.id) {
+    sessionStateEl.textContent = "Connecting";
+    sessionDescriptionEl.textContent =
+      "Loading shared notes for this AOI. If the API is unavailable, the browser keeps your local draft.";
+    copySessionLinkEl.disabled = true;
+    newSessionEl.disabled = true;
+    return;
+  }
+
+  sessionStateEl.textContent = sessionState.isDefault ? "Shared session" : "Private session";
+  sessionDescriptionEl.textContent = sessionState.isDefault
+    ? "Anyone opening the map without a session link sees this shared review."
+    : `This link opens a private session: ${sessionState.id.slice(0, 8)}…`;
+  copySessionLinkEl.disabled = false;
+  newSessionEl.disabled = false;
 }
 
 function renderParcelList(visible) {
@@ -412,6 +818,9 @@ function exportRows() {
     };
   });
 }
+
+renderAll();
+void bootstrapSession();
 
 const protocol = new pmtiles.Protocol();
 protocol.add(new pmtiles.PMTiles(new pmtiles.FileSource(basemapFile)));
@@ -659,14 +1068,15 @@ function parcelBounds(parcel) {
 
 function mapPadding() {
   if (globalThis.innerWidth < 1120) {
-    return { top: 72, right: 28, bottom: 28, left: 28 };
+    return { top: 44, right: 44, bottom: 44, left: 44 };
   }
-  return { top: 90, right: 120, bottom: 90, left: 420 };
+  return { top: 56, right: 56, bottom: 56, left: 56 };
 }
 
 function renderAll() {
   const visible = ensureActiveParcel();
   renderMetrics();
+  renderSessionPanel();
   renderParcelList(visible);
   renderParcelEditor(activeParcel(), visible);
   refreshMapSelection();
@@ -802,10 +1212,38 @@ exportCsvEl.addEventListener("click", () => {
 });
 
 clearFeedbackEl.addEventListener("click", () => {
-  if (!confirm("Clear all saved local-knowledge notes in this browser?")) {
+  if (!confirm("Clear the local draft cache for this session? Shared notes will remain online.")) {
     return;
   }
-  localStorage.removeItem(STORAGE_KEY);
-  feedback = loadFeedback();
-  renderAll();
+  localStorage.removeItem(activeStorageKey);
+  feedback = createEmptyFeedback();
+  setSyncState("loading", "Reloading shared notes…");
+  pendingParcelIds = new Set();
+  void bootstrapSession();
+});
+
+copySessionLinkEl.addEventListener("click", async () => {
+  const link = buildSessionLink(sessionState.isDefault ? "" : sessionState.id);
+  try {
+    await navigator.clipboard.writeText(link);
+    setSyncState("synced", "Session link copied.");
+  } catch {
+    window.prompt("Copy this session link", link);
+  }
+});
+
+newSessionEl.addEventListener("click", () => {
+  void createPrivateSession();
+});
+
+window.addEventListener("online", () => {
+  if (!sessionState.id) {
+    void bootstrapSession();
+    return;
+  }
+  scheduleParcelSync();
+});
+
+window.addEventListener("offline", () => {
+  setSyncState("offline", "Offline. Changes are stored locally.");
 });

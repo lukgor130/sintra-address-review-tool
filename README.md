@@ -86,6 +86,30 @@ The satellite mode is built from public imagery tiles at pack-generation time
 and then served locally from static files, so the deployed page has no runtime
 imagery dependency.
 
+## Shared AOI Notes
+
+The AOI viewer now keeps parcel notes and tags in a shared Cloudflare D1
+database, while the browser still keeps a local draft cache for fast editing and
+offline recovery.
+
+What lives where:
+
+- GitHub Pages keeps the static AOI pack: manifest, parcel geometry, basemap,
+  labels, and satellite tiles.
+- Cloudflare Pages Functions serve the AOI notes API from `/api/aoi`.
+- D1 stores the mutable overlay: one shared default session per AOI pack, plus
+  optional private session links.
+
+To enable it in Cloudflare Pages:
+
+1. Create a D1 database.
+2. Bind it to the Pages project as `AOI_DB`.
+3. Apply [`cloudflare/aoi-notes-schema.sql`](cloudflare/aoi-notes-schema.sql).
+4. Redeploy the Pages project so `/api/aoi` is available alongside the map.
+
+The viewer will fall back to the local browser draft if the API is unavailable,
+but shared edits only appear once the D1-backed API is live.
+
 ## Run Locally
 
 ```bash
@@ -132,7 +156,12 @@ python3 scripts/cloudflare.py point-pages
 ```
 
 The DNS record should stay pointed at `lukgor130.github.io` with Cloudflare
-proxying turned off so GitHub Pages is the source of truth.
+proxying turned on so Cloudflare terminates TLS at the edge and keeps
+`maps.verrio.co` on a valid certificate.
+
+If you are using Cloudflare Pages for the map site, also make sure the Pages
+project has the D1 binding (`AOI_DB`) configured so the shared AOI notes API
+can read and write the session records.
 
 ## Main Files
 
@@ -146,6 +175,8 @@ proxying turned off so GitHub Pages is the source of truth.
 - `app/vendor/`
 - `app/data/sample.json`
 - `app/data/pack-azenhas/`
+- `cloudflare/aoi-notes-schema.sql`
+- `functions/api/aoi.js`
 - `scripts/build_aoi_pack.py`
 - `scripts/serve_app.py`
 - `output/playwright/`

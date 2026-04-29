@@ -103,7 +103,14 @@ def purge_cache(urls: list[str]) -> int:
     return 0 if payload.get("success") else 1
 
 
-def set_dns_target(target: str) -> int:
+def env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def set_dns_target(target: str, proxied: bool) -> int:
     zone_id = resolve_zone_id()
     domain = require("CF_DOMAIN").rstrip(".")
     query = urllib.parse.urlencode({"name": domain})
@@ -123,7 +130,7 @@ def set_dns_target(target: str) -> int:
             "type": "CNAME",
             "name": domain,
             "content": target,
-            "proxied": False,
+            "proxied": proxied,
             "ttl": 1,
         },
     )
@@ -149,6 +156,12 @@ def main() -> int:
         default=os.environ.get("CF_PAGES_TARGET", "lukgor130.github.io"),
         help="GitHub Pages host to point the CNAME at.",
     )
+    point_parser.add_argument(
+        "--proxied",
+        action=argparse.BooleanOptionalAction,
+        default=env_bool("CF_PROXIED", True),
+        help="Whether Cloudflare should proxy the CNAME and terminate TLS at the edge.",
+    )
 
     args = parser.parse_args()
 
@@ -157,7 +170,7 @@ def main() -> int:
     if args.command == "purge":
         return purge_cache(args.urls)
     if args.command == "point-pages":
-        return set_dns_target(args.target)
+        return set_dns_target(args.target, args.proxied)
     return 1
 
 

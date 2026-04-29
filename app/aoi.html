@@ -26,6 +26,29 @@
 
         <section class="metric-strip" id="metric-strip" aria-label="Review progress"></section>
 
+        <section class="field-view-panel" aria-label="Field view controls">
+          <div class="field-view-card">
+            <div>
+              <p class="eyebrow">Field view</p>
+              <strong id="map-title">Loading map</strong>
+              <span class="map-status" id="basemap-status">Offline pack</span>
+            </div>
+            <div class="basemap-toggle" role="tablist" aria-label="Basemap style">
+              <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
+              <button type="button" data-basemap-mode="satellite" aria-pressed="false">
+                Satellite
+              </button>
+            </div>
+            <div class="legend" aria-label="Knowledge status legend">
+              <span><i class="dot dot--owner"></i>Owner</span>
+              <span><i class="dot dot--network"></i>Linked</span>
+              <span><i class="dot dot--possible"></i>Maybe</span>
+              <span><i class="dot dot--open"></i>Open</span>
+              <span><i class="dot dot--none"></i>No lead</span>
+            </div>
+          </div>
+        </section>
+
         <section class="control-panel">
           <div class="field-group">
             <label for="parcel-search">Search plots</label>
@@ -67,64 +90,18 @@
           <div class="parcel-list" id="parcel-list"></div>
         </section>
 
-        <section class="editor-panel">
+        <section class="session-panel">
           <div class="section-title">
-            <h2 id="parcel-title">Select a plot</h2>
-            <span class="pill" id="parcel-position"></span>
+            <h2>Session</h2>
+            <span class="pill" id="session-state">Loading</span>
           </div>
-
-          <div class="parcel-summary" id="parcel-summary"></div>
-
-          <div class="field-group">
-            <span class="field-label">What does the local contact know?</span>
-            <div class="choice-row" id="knowledge-status">
-              <button type="button" data-status="owner_known">Knows owner</button>
-              <button type="button" data-status="network_known">Knows someone linked</button>
-              <button type="button" data-status="possible_lead">Possible lead</button>
-              <button type="button" data-status="needs_research">Needs research</button>
-              <button type="button" data-status="no_local_lead">No lead</button>
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label for="lead-name">Lead name or owner clue</label>
-            <input
-              id="lead-name"
-              type="text"
-              placeholder="Person, family name, business, or landmark clue"
-            />
-          </div>
-
-          <div class="field-group">
-            <label for="contact-trail">How do we reach or verify this lead?</label>
-            <input
-              id="contact-trail"
-              type="text"
-              placeholder="Neighbour, café owner, WhatsApp, old owner, local broker..."
-            />
-          </div>
-
-          <div class="field-group">
-            <span class="field-label">Confidence</span>
-            <div class="choice-row compact" id="confidence-row">
-              <button type="button" data-confidence="high">High</button>
-              <button type="button" data-confidence="medium">Medium</button>
-              <button type="button" data-confidence="low">Low</button>
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label for="parcel-notes">Notes</label>
-            <textarea
-              id="parcel-notes"
-              rows="4"
-              placeholder="Anything useful: local nickname, family link, whether the plot feels abandoned, likely gatekeeper..."
-            ></textarea>
-          </div>
-
-          <div class="action-row">
-            <button type="button" class="ghost-button" id="previous-parcel">Previous</button>
-            <button type="button" class="primary-button" id="next-parcel">Save and next</button>
+          <p id="session-description">
+            Shared notes from this AOI load for everyone. Open the same link on another device to
+            continue the same review.
+          </p>
+          <div class="export-actions">
+            <button type="button" id="copy-session-link">Copy link</button>
+            <button type="button" class="ghost-button" id="new-session">New session</button>
           </div>
         </section>
 
@@ -136,38 +113,88 @@
           <div class="export-actions">
             <button type="button" id="export-json">Export JSON</button>
             <button type="button" id="export-csv">Export CSV</button>
-            <button type="button" class="danger-button" id="clear-feedback">Clear</button>
+            <button type="button" class="danger-button" id="clear-feedback">Reset local cache</button>
           </div>
         </section>
       </aside>
 
       <main class="map-panel">
-        <div class="map-toolbar">
-          <div>
-            <p class="eyebrow">Field view</p>
-            <strong id="map-title">Loading map</strong>
-            <span class="map-status" id="basemap-status">Offline pack</span>
-          </div>
-          <div class="basemap-toggle" role="tablist" aria-label="Basemap style">
-            <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
-            <button type="button" data-basemap-mode="satellite" aria-pressed="false">
-              Satellite
-            </button>
-          </div>
-          <div class="legend" aria-label="Knowledge status legend">
-            <span><i class="dot dot--owner"></i>Owner</span>
-            <span><i class="dot dot--network"></i>Linked</span>
-            <span><i class="dot dot--possible"></i>Maybe</span>
-            <span><i class="dot dot--open"></i>Open</span>
-            <span><i class="dot dot--none"></i>No lead</span>
-          </div>
-        </div>
         <div id="viewDiv"></div>
       </main>
+
+      <section class="editor-panel">
+        <div class="editor-panel__inner">
+          <div class="section-title editor-panel__title">
+            <div>
+              <p class="eyebrow">Live review</p>
+              <h2 id="parcel-title">Select a plot</h2>
+            </div>
+            <span class="pill" id="parcel-position"></span>
+          </div>
+
+          <div class="parcel-summary editor-panel__summary" id="parcel-summary"></div>
+
+          <div class="editor-panel__column editor-panel__column--main">
+            <div class="field-group">
+              <span class="field-label">What does the local contact know?</span>
+              <div class="choice-row" id="knowledge-status">
+                <button type="button" data-status="owner_known">Knows owner</button>
+                <button type="button" data-status="network_known">Knows someone linked</button>
+                <button type="button" data-status="possible_lead">Possible lead</button>
+                <button type="button" data-status="needs_research">Needs research</button>
+                <button type="button" data-status="no_local_lead">No lead</button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="lead-name">Lead name or owner clue</label>
+              <input
+                id="lead-name"
+                type="text"
+                placeholder="Person, family name, business, or landmark clue"
+              />
+            </div>
+
+            <div class="field-group">
+              <label for="contact-trail">How do we reach or verify this lead?</label>
+              <input
+                id="contact-trail"
+                type="text"
+                placeholder="Neighbour, café owner, WhatsApp, old owner, local broker..."
+              />
+            </div>
+          </div>
+
+          <div class="editor-panel__column editor-panel__column--side">
+            <div class="field-group">
+              <span class="field-label">Confidence</span>
+              <div class="choice-row compact" id="confidence-row">
+                <button type="button" data-confidence="high">High</button>
+                <button type="button" data-confidence="medium">Medium</button>
+                <button type="button" data-confidence="low">Low</button>
+              </div>
+            </div>
+
+            <div class="field-group editor-panel__notes">
+              <label for="parcel-notes">Notes</label>
+              <textarea
+                id="parcel-notes"
+                rows="4"
+                placeholder="Anything useful: local nickname, family link, whether the plot feels abandoned, likely gatekeeper..."
+              ></textarea>
+            </div>
+
+            <div class="action-row editor-panel__actions">
+              <button type="button" class="ghost-button" id="previous-parcel">Previous</button>
+              <button type="button" class="primary-button" id="next-parcel">Save and next</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <script src="./vendor/maplibre-gl.js"></script>
     <script src="./vendor/pmtiles.js"></script>
-    <script type="module" src="./aoi.js?v=2026-04-28-satellite-toggle"></script>
+    <script type="module" src="./aoi.js?v=2026-04-29-persistent-notes"></script>
   </body>
 </html>

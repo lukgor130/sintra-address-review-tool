@@ -1,9 +1,11 @@
 const SOURCE_BASE = new URL("./data/source-cache/", import.meta.url);
 const MANIFEST_URL = new URL("manifest.json", SOURCE_BASE);
-const BASEMAP_STYLE_URL = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+const STREET_STYLE_URL = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+const SATELLITE_TILE_URL =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 const EPSG_3763 =
   "+proj=tmerc +lat_0=39.6682583333333 +lon_0=-8.13310833333333 +k=1 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs";
-const STORAGE_KEY = "sintra-source-explorer-state-v1";
+const STORAGE_KEY = "sintra-source-explorer-state-v2";
 
 const proj4Lib = globalThis.proj4;
 if (!proj4Lib) {
@@ -11,15 +13,59 @@ if (!proj4Lib) {
 }
 proj4Lib.defs("EPSG:3763", EPSG_3763);
 
-const [manifest, parcelsLayerData] = await Promise.all([
+const [manifest, parcelsLayerData, streetStyle] = await Promise.all([
   fetch(MANIFEST_URL).then((response) => response.json()),
   fetch(new URL("parcels-livre-expectante.json", SOURCE_BASE)).then((response) => response.json()),
+  fetch(STREET_STYLE_URL).then((response) => response.json()),
 ]);
 
-const layerPalette = {
-  30: { fill: "#d5dfbb", line: "#6b7d3d" },
-  31: { fill: "#f0cfbf", line: "#a25a37" },
-  32: { fill: "#d1e8e7", line: "#317e7e" },
+const parcelCounts = parcelsLayerData.features.reduce(
+  (acc, feature) => {
+    const tipologia = String(feature.attributes?.Tipologia ?? "").trim().toLowerCase();
+    if (tipologia === "livre") {
+      acc.livre += 1;
+    } else if (tipologia === "expectante") {
+      acc.expectante += 1;
+    } else {
+      acc.other += 1;
+    }
+    acc.total += 1;
+    return acc;
+  },
+  { total: 0, livre: 0, expectante: 0, other: 0 },
+);
+
+function cloneStyle(styleObject) {
+  return JSON.parse(JSON.stringify(styleObject));
+}
+
+function buildSatelliteStyle(baseStyle) {
+  const next = cloneStyle(baseStyle);
+  next.sources = {
+    ...(cloneStyle(baseStyle.sources) || {}),
+    satellite: {
+      type: "raster",
+      tiles: [SATELLITE_TILE_URL],
+      tileSize: 256,
+      minzoom: 0,
+      maxzoom: 19,
+      attribution: "Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community.",
+    },
+  };
+  next.layers = [
+    {
+      id: "satellite-basemap",
+      type: "raster",
+      source: "satellite",
+    },
+    ...next.layers.filter((layer) => ["line", "symbol", "circle"].includes(layer.type)),
+  ];
+  return next;
+}
+
+const basemapStyles = {
+  street: streetStyle,
+  satellite: buildSatelliteStyle(streetStyle),
 };
 
 const mapTitleEl = document.querySelector("#map-title");
@@ -30,29 +76,30 @@ const inspectorStateEl = document.querySelector("#selection-state");
 const selectionSummaryEl = document.querySelector("#selection-summary");
 const fitVisibleButton = document.querySelector("#fit-visible-button");
 const clearSelectionButton = document.querySelector("#clear-selection-button");
-const parcelsMasterToggle = document.querySelector("#parcels-master-toggle");
-const parcelsMasterState = document.querySelector("#parcels-master-state");
-const parcelsFillToggle = document.querySelector("#parcels-fill-toggle");
-const parcelsFillState = document.querySelector("#parcels-fill-state");
-const parcelsOutlineToggle = document.querySelector("#parcels-outline-toggle");
-const parcelsOutlineState = document.querySelector("#parcels-outline-state");
+const parcelVisibleToggle = document.querySelector("#parcel-visible-toggle");
 const regulatoryMasterToggle = document.querySelector("#regulatory-master-toggle");
 const regulatoryMasterState = document.querySelector("#regulatory-master-state");
+const parcelLivreCountEl = document.querySelector("#parcel-livre-count");
+const parcelExpectanteCountEl = document.querySelector("#parcel-expectante-count");
 const mapEmptyState = document.createElement("div");
 mapEmptyState.className = "map-empty-state";
 mapEmptyState.textContent = "No layers visible";
 document.querySelector(".map-panel").append(mapEmptyState);
 
-const state = loadState();
-const loadedRegulatoryLayers = new Map();
+let state;
+let map = null;
 let selectedFeature = null;
+let selectedLayerName = "";
 let parcelBounds = null;
 let mapReady = false;
+let basemapMode = "street";
+const loadedRegulatoryLayers = new Map();
+const regulatoryDataCache = new Map();
 
 function loadState() {
   const fallback = {
-    parcelsFillVisible: true,
-    parcelsOutlineVisible: true,
+    basemapMode: "street",
+    parcelsVisible: true,
     regulatoryVisible: {
       30: false,
       31: false,
@@ -60,7 +107,16 @@ function loadState() {
     },
   };
   try {
-    return { ...fallback, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return {
+      ...fallback,
+      ...parsed,
+      parcelsVisible:
+        parsed.parcelsVisible ??
+        parsed.parcelsFillVisible ??
+        parsed.parcelsOutlineVisible ??
+        fallback.parcelsVisible,
+    };
   } catch {
     return fallback;
   }
@@ -182,9 +238,10 @@ function buildSummary() {
     0,
   );
   summaryStripEl.innerHTML = [
-    ["Parcels", formatNumber(manifest.datasets.parcels.count)],
+    ["Parcels", formatNumber(parcelCounts.total)],
+    ["Livre", formatNumber(parcelCounts.livre)],
+    ["Expectante", formatNumber(parcelCounts.expectante)],
     ["Regulatory", formatNumber(regulatoryTotal)],
-    ["Visible layers", String(visibleLayerIds().length || 0)],
     ["Snapshot", new Date(manifest.generatedAt).toLocaleDateString()],
   ]
     .map(
@@ -217,21 +274,18 @@ function buildRegulatoryControls() {
 }
 
 function layerVisible(layerId) {
-  if (layerId === "parcels-fill") {
-    return parcelsFillToggle.checked;
-  }
-  if (layerId === "parcels-outline") {
-    return parcelsOutlineToggle.checked;
+  if (layerId === "parcels-fill" || layerId === "parcels-outline") {
+    return Boolean(state.parcelsVisible);
   }
   return Boolean(state.regulatoryVisible[keyForRegulatory(layerId)]);
 }
 
 function visibleLayerIds() {
   const ids = [];
-  if (parcelsFillToggle.checked) {
+  if (state.parcelsVisible) {
     ids.push("parcels-fill");
   }
-  if (parcelsOutlineToggle.checked) {
+  if (state.parcelsVisible) {
     ids.push("parcels-outline");
   }
   for (const layer of manifest.datasets.regulatoryLimits.layers) {
@@ -246,16 +300,9 @@ function updateMapEmptyState() {
   mapEmptyState.style.display = visibleLayerIds().length ? "none" : "block";
 }
 
-function syncParcelsState() {
-  const fillOn = parcelsFillToggle.checked;
-  const outlineOn = parcelsOutlineToggle.checked;
-  state.parcelsFillVisible = fillOn;
-  state.parcelsOutlineVisible = outlineOn;
-  parcelsMasterToggle.checked = fillOn && outlineOn;
-  parcelsMasterToggle.indeterminate = fillOn !== outlineOn;
-  parcelsMasterState.textContent = fillOn || outlineOn ? "On" : "Off";
-  setLayerChip(parcelsFillState, fillOn);
-  setLayerChip(parcelsOutlineState, outlineOn);
+function syncParcelState() {
+  parcelVisibleToggle.checked = Boolean(state.parcelsVisible);
+  parcelVisibleToggle.setAttribute("aria-checked", String(Boolean(state.parcelsVisible)));
 }
 
 function syncRegulatoryState() {
@@ -280,7 +327,7 @@ function syncRegulatoryState() {
 }
 
 function syncUi() {
-  syncParcelsState();
+  syncParcelState();
   syncRegulatoryState();
   updateMapEmptyState();
   buildSummary();
@@ -289,6 +336,7 @@ function syncUi() {
 
 function setSelection(feature, layerName) {
   selectedFeature = feature ?? null;
+  selectedLayerName = layerName ?? "";
   if (!selectedFeature) {
     inspectorStateEl.textContent = "None";
     selectionSummaryEl.textContent =
@@ -411,35 +459,52 @@ function addSelectionLayer() {
 function addParcelsLayer() {
   const collection = layerToGeoJson(parcelsLayerData, "parcels");
   parcelBounds = collection.bounds;
-  map.addSource("parcels-source", {
-    type: "geojson",
-    data: collection,
-  });
-  map.addLayer({
-    id: "parcels-fill",
-    type: "fill",
-    source: "parcels-source",
-    paint: {
-      "fill-color": "#d9a431",
-      "fill-opacity": 0.16,
-    },
-  });
-  map.addLayer({
-    id: "parcels-outline",
-    type: "line",
-    source: "parcels-source",
-    paint: {
-      "line-color": "#7a4d05",
-      "line-width": 1.25,
-      "line-opacity": 0.82,
-    },
-  });
-  map.setLayoutProperty("parcels-fill", "visibility", parcelsFillToggle.checked ? "visible" : "none");
-  map.setLayoutProperty(
-    "parcels-outline",
-    "visibility",
-    parcelsOutlineToggle.checked ? "visible" : "none",
-  );
+  if (!map.getSource("parcels-source")) {
+    map.addSource("parcels-source", {
+      type: "geojson",
+      data: collection,
+    });
+  }
+  if (!map.getLayer("parcels-fill")) {
+    map.addLayer({
+      id: "parcels-fill",
+      type: "fill",
+      source: "parcels-source",
+      paint: {
+        "fill-color": [
+          "match",
+          ["coalesce", ["get", "Tipologia"], ""],
+          "Livre",
+          "#6b7d3d",
+          "Expectante",
+          "#d9a431",
+          "#a59f91",
+        ],
+        "fill-opacity": 0.18,
+      },
+    });
+  }
+  if (!map.getLayer("parcels-outline")) {
+    map.addLayer({
+      id: "parcels-outline",
+      type: "line",
+      source: "parcels-source",
+      paint: {
+        "line-color": [
+          "match",
+          ["coalesce", ["get", "Tipologia"], ""],
+          "Livre",
+          "#40511d",
+          "Expectante",
+          "#7a4d05",
+          "#6b675e",
+        ],
+        "line-width": 1.3,
+        "line-opacity": 0.84,
+      },
+    });
+  }
+  applyParcelVisibility();
 }
 
 async function ensureRegulatoryLayer(layerConfig) {
@@ -448,38 +513,48 @@ async function ensureRegulatoryLayer(layerConfig) {
     return loadedRegulatoryLayers.get(layerId);
   }
 
-  const layerData = await fetch(new URL(layerConfig.file, SOURCE_BASE)).then((response) =>
-    response.json(),
-  );
+  if (!regulatoryDataCache.has(layerId)) {
+    regulatoryDataCache.set(
+      layerId,
+      await fetch(new URL(layerConfig.file, SOURCE_BASE)).then((response) => response.json()),
+    );
+  }
+  const layerData = regulatoryDataCache.get(layerId);
   const collection = layerToGeoJson(layerData, `regulatory-${layerId}`);
   const sourceId = `regulatory-source-${layerId}`;
   const fillId = `regulatory-fill-${layerId}`;
   const lineId = `regulatory-line-${layerId}`;
   const palette = layerPalette[layerId];
 
-  map.addSource(sourceId, {
-    type: "geojson",
-    data: collection,
-  });
-  map.addLayer({
-    id: fillId,
-    type: "fill",
-    source: sourceId,
-    paint: {
-      "fill-color": palette.fill,
-      "fill-opacity": 0.14,
-    },
-  });
-  map.addLayer({
-    id: lineId,
-    type: "line",
-    source: sourceId,
-    paint: {
-      "line-color": palette.line,
-      "line-width": 1.35,
-      "line-opacity": 0.9,
-    },
-  });
+  if (!map.getSource(sourceId)) {
+    map.addSource(sourceId, {
+      type: "geojson",
+      data: collection,
+    });
+  }
+  if (!map.getLayer(fillId)) {
+    map.addLayer({
+      id: fillId,
+      type: "fill",
+      source: sourceId,
+      paint: {
+        "fill-color": palette.fill,
+        "fill-opacity": 0.14,
+      },
+    });
+  }
+  if (!map.getLayer(lineId)) {
+    map.addLayer({
+      id: lineId,
+      type: "line",
+      source: sourceId,
+      paint: {
+        "line-color": palette.line,
+        "line-width": 1.35,
+        "line-opacity": 0.9,
+      },
+    });
+  }
 
   const layerRecord = {
     ...layerConfig,
@@ -491,6 +566,16 @@ async function ensureRegulatoryLayer(layerConfig) {
   };
   loadedRegulatoryLayers.set(layerId, layerRecord);
   return layerRecord;
+}
+
+function applyParcelVisibility() {
+  if (!map?.getLayer("parcels-fill") || !map?.getLayer("parcels-outline")) {
+    return;
+  }
+  const visibility = state.parcelsVisible ? "visible" : "none";
+  map.setLayoutProperty("parcels-fill", "visibility", visibility);
+  map.setLayoutProperty("parcels-outline", "visibility", visibility);
+  parcelVisibleToggle.checked = Boolean(state.parcelsVisible);
 }
 
 function setRegulatoryVisibility(layerConfig, visible) {
@@ -541,13 +626,13 @@ async function toggleRegulatoryLayer(layerConfig, visible) {
     syncRegulatoryState();
     updateMapEmptyState();
     saveState();
-    setMapStatus("Local layers ready");
+    setMapStatus(readyStatusText());
   }
 }
 
 function fitVisibleLayers() {
   const bounds = [];
-  if (map.getSource("parcels-source") && (parcelsFillToggle.checked || parcelsOutlineToggle.checked)) {
+  if (map.getSource("parcels-source") && state.parcelsVisible) {
     if (parcelBounds) {
       bounds.push(parcelBounds);
     }
@@ -586,29 +671,9 @@ function fitVisibleLayers() {
 }
 
 function setupEvents() {
-  parcelsMasterToggle.addEventListener("change", () => {
-    parcelsFillToggle.checked = parcelsMasterToggle.checked;
-    parcelsOutlineToggle.checked = parcelsMasterToggle.checked;
-    map.setLayoutProperty("parcels-fill", "visibility", parcelsFillToggle.checked ? "visible" : "none");
-    map.setLayoutProperty(
-      "parcels-outline",
-      "visibility",
-      parcelsOutlineToggle.checked ? "visible" : "none",
-    );
-    syncUi();
-  });
-
-  parcelsFillToggle.addEventListener("change", () => {
-    map.setLayoutProperty("parcels-fill", "visibility", parcelsFillToggle.checked ? "visible" : "none");
-    syncUi();
-  });
-
-  parcelsOutlineToggle.addEventListener("change", () => {
-    map.setLayoutProperty(
-      "parcels-outline",
-      "visibility",
-      parcelsOutlineToggle.checked ? "visible" : "none",
-    );
+  parcelVisibleToggle.addEventListener("change", () => {
+    state.parcelsVisible = parcelVisibleToggle.checked;
+    applyParcelVisibility();
     syncUi();
   });
 
@@ -632,6 +697,10 @@ function setupEvents() {
       await toggleRegulatoryLayer(layer, checkbox.checked);
       syncUi();
     });
+  }
+
+  for (const button of document.querySelectorAll("[data-basemap-mode]")) {
+    button.addEventListener("click", () => setBasemapMode(button.dataset.basemapMode));
   }
 
   fitVisibleButton.addEventListener("click", () => fitVisibleLayers());
@@ -680,16 +749,46 @@ function updateSelectionFromClick(event) {
 }
 
 function syncMapTitle() {
-  mapTitleEl.textContent = `${manifest.datasets.parcels.count.toLocaleString("en-GB")} parcels, ${manifest.datasets.regulatoryLimits.layers
-    .map((layer) => layer.count)
-    .reduce((sum, count) => sum + count, 0)
-    .toLocaleString("en-GB")} regulatory features`;
+  mapTitleEl.textContent = `${parcelCounts.total.toLocaleString("en-GB")} parcels · ${parcelCounts.livre.toLocaleString(
+    "en-GB",
+  )} Livre · ${parcelCounts.expectante.toLocaleString("en-GB")} Expectante`;
+  parcelLivreCountEl.textContent = `${formatNumber(parcelCounts.livre)} features`;
+  parcelExpectanteCountEl.textContent = `${formatNumber(parcelCounts.expectante)} features`;
+}
+
+function updateBasemapUi() {
+  for (const button of document.querySelectorAll("[data-basemap-mode]")) {
+    const active = button.dataset.basemapMode === basemapMode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  }
+  if (mapReady) {
+    setMapStatus(readyStatusText());
+  }
+}
+
+function readyStatusText() {
+  const label = basemapMode === "satellite" ? "Satellite + labels" : "Street";
+  return `${label} basemap · local cache ready`;
+}
+
+function setBasemapMode(nextMode) {
+  if (!basemapStyles[nextMode] || nextMode === basemapMode) {
+    return;
+  }
+  basemapMode = nextMode;
+  state.basemapMode = nextMode;
+  saveState();
+  mapReady = false;
+  updateBasemapUi();
+  setMapStatus(`${nextMode === "satellite" ? "Satellite + labels" : "Street"} basemap loading…`);
+  map.setStyle(cloneStyle(basemapStyles[basemapMode]));
 }
 
 function setupMap() {
-  const map = new maplibregl.Map({
+  map = new maplibregl.Map({
     container: "map",
-    style: BASEMAP_STYLE_URL,
+    style: cloneStyle(basemapStyles[basemapMode]),
     center: [-9.15, 38.8],
     zoom: 11,
     minZoom: 8,
@@ -699,16 +798,26 @@ function setupMap() {
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-left");
   map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-left");
-  map.on("load", async () => {
-    addParcelsLayer();
-    addSelectionLayer();
-    await loadPersistedRegulatoryLayers();
-    syncUi();
-    mapReady = true;
-    syncMapTitle();
-    setMapStatus("CARTO Positron basemap + local cache loaded");
-    fitVisibleLayers();
-    map.resize();
+  map.on("style.load", async () => {
+    try {
+      addParcelsLayer();
+      addSelectionLayer();
+      loadedRegulatoryLayers.clear();
+      await loadPersistedRegulatoryLayers();
+      syncMapTitle();
+      syncUi();
+      mapReady = true;
+      updateBasemapUi();
+      if (selectedFeature) {
+        setSelection(selectedFeature, selectedLayerName);
+      }
+      fitVisibleLayers();
+      map.resize();
+    } catch (error) {
+      console.error("Failed to restore source layers after style reload", error);
+      mapReady = true;
+      setMapStatus("Basemap loaded, but some local layers failed to restore");
+    }
   });
 
   map.on("mousemove", updateMapCursor);
@@ -720,6 +829,11 @@ function setupMap() {
 }
 
 function restoreRegulatoryState() {
+  state.parcelsVisible = Boolean(
+    state.parcelsVisible ?? state.parcelsFillVisible ?? state.parcelsOutlineVisible ?? true,
+  );
+  state.basemapMode = basemapStyles[state.basemapMode] ? state.basemapMode : "street";
+  basemapMode = state.basemapMode;
   for (const layer of manifest.datasets.regulatoryLimits.layers) {
     state.regulatoryVisible[keyForRegulatory(layer.layerId)] = Boolean(
       state.regulatoryVisible[keyForRegulatory(layer.layerId)],
@@ -745,15 +859,15 @@ async function loadPersistedRegulatoryLayers() {
   }
 }
 
-syncMapTitle();
+state = loadState();
 restoreRegulatoryState();
 initRegulatoryRows();
-parcelsFillToggle.checked = Boolean(state.parcelsFillVisible);
-parcelsOutlineToggle.checked = Boolean(state.parcelsOutlineVisible);
-mapStatusEl.textContent = "Loading CARTO Positron basemap";
+syncMapTitle();
 syncUi();
+updateBasemapUi();
+setMapStatus(`${basemapMode === "satellite" ? "Satellite + labels" : "Street"} basemap loading…`);
 setupEvents();
-const map = setupMap();
+setupMap();
 
 window.addEventListener("resize", () => {
   if (mapReady) {
