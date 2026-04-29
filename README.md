@@ -40,6 +40,14 @@ python3 extract_sample.py --cache-source-layers
 By default this writes to `app/data/source-cache/` with a manifest and one JSON
 file per source layer. Use `--cache-dir` to point the cache somewhere else.
 
+## Explore The Cache
+
+Open the lightweight source explorer to browse the cached parcel and
+regulatory layers, toggle them on and off, and inspect raw feature attributes:
+
+- `http://127.0.0.1:8011/source-explorer.html`
+- `http://127.0.0.1:8011/sintratotal/`
+
 ## Build An AOI Review Pack
 
 The local-knowledge mode accepts a zipped shapefile AOI and generates a fully

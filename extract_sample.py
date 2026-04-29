@@ -155,7 +155,7 @@ def fetch_layer_features(
         batch = object_ids[start : start + batch_size]
         if not batch:
             continue
-        batch_response = get_json(
+        batch_response = request_json(
             query_url,
             {
                 "objectIds": ",".join(str(object_id) for object_id in batch),
@@ -164,6 +164,7 @@ def fetch_layer_features(
                 "f": "pjson",
                 "token": token,
             },
+            method="POST",
         )
         features.extend(batch_response.get("features", []))
 

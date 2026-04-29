@@ -1,0 +1,155 @@
+{
+  "generatedAt": "2026-04-28T22:04:14Z",
+  "siteId": "ApoioInvestidor",
+  "parcelServiceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/Internet/ApoioInvestidor/MapServer",
+  "basemapServiceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/Internet/Base_cartografica_Dez2014/MapServer",
+  "datasets": {
+    "parcels": {
+      "file": "parcels-livre-expectante.json",
+      "where": "UPPER(Tipologia) IN ('LIVRE','EXPECTANTE')",
+      "count": 4882,
+      "geometryType": "esriGeometryPolygon"
+    },
+    "addresses": {
+      "file": "addresses-full.json",
+      "count": 81106,
+      "geometryType": "esriGeometryPoint"
+    },
+    "roads": {
+      "file": "roads-full.json",
+      "count": 6712,
+      "geometryType": "esriGeometryPolyline"
+    },
+    "regulatoryLimits": {
+      "generatedAt": "2026-04-28T22:04:14Z",
+      "groupLayer": {
+        "currentVersion": 10.91,
+        "cimVersion": "2.9.0",
+        "id": 29,
+        "name": "Limites Regulamentares",
+        "type": "Group Layer",
+        "description": "",
+        "geometryType": null,
+        "copyrightText": "",
+        "parentLayer": null,
+        "subLayers": [
+          {
+            "id": 32,
+            "name": "Áreas de Reabilitação Urbana"
+          },
+          {
+            "id": 31,
+            "name": "Áreas Urbanas de Génese Ilegal"
+          },
+          {
+            "id": 30,
+            "name": "Unidades Operativas de Planeamento e Gestão"
+          }
+        ],
+        "minScale": 0,
+        "maxScale": 0,
+        "defaultVisibility": false,
+        "extent": {
+          "xmin": -118821.75310000032,
+          "ymin": -102515.42009999976,
+          "xmax": -94480.28230000008,
+          "ymax": -81654.41899999976,
+          "spatialReference": {
+            "wkid": 3763,
+            "latestWkid": 3763,
+            "xyTolerance": 0.001,
+            "zTolerance": 2,
+            "mTolerance": 0.001,
+            "falseX": -5623200,
+            "falseY": -14394800,
+            "xyUnits": 450265407.00157917,
+            "falseZ": 0,
+            "zUnits": 1,
+            "falseM": -100000,
+            "mUnits": 10000
+          }
+        },
+        "hasAttachments": false,
+        "htmlPopupType": "esriServerHTMLPopupTypeNone",
+        "displayField": "",
+        "typeIdField": null,
+        "subtypeFieldName": null,
+        "subtypeField": null,
+        "defaultSubtypeCode": null,
+        "fields": null,
+        "geometryField": {},
+        "indexes": [],
+        "subtypes": [],
+        "relationships": [],
+        "canModifyLayer": false,
+        "canScaleSymbols": false,
+        "hasLabels": false,
+        "capabilities": "Map,Query",
+        "supportsStatistics": false,
+        "supportsExceedsLimitStatistics": false,
+        "supportsAdvancedQueries": false,
+        "supportedQueryFormats": "JSON, geoJSON, PBF",
+        "isDataVersioned": false,
+        "ownershipBasedAccessControlForFeatures": {
+          "allowOthersToQuery": true
+        },
+        "useStandardizedQueries": true,
+        "advancedQueryCapabilities": {
+          "useStandardizedQueries": true,
+          "supportsStatistics": false,
+          "supportsPercentileStatistics": false,
+          "supportsHavingClause": false,
+          "supportsOrderBy": false,
+          "supportsDistinct": false,
+          "supportsCountDistinct": false,
+          "supportsPagination": false,
+          "supportsLod": false,
+          "supportsQueryWithLodSR": false,
+          "supportsTrueCurve": true,
+          "supportsQueryWithDatumTransformation": true,
+          "supportsReturningQueryExtent": true,
+          "supportsQueryWithDistance": true,
+          "supportsSqlExpression": false,
+          "supportsTimeRelation": true,
+          "supportsSqlFormat": false,
+          "supportsQueryAnalytic": false
+        },
+        "supportsDatumTransformation": true,
+        "dateFieldsTimeReference": null,
+        "preferredTimeReference": null,
+        "datesInUnknownTimezone": false,
+        "hasMetadata": true,
+        "isDataArchived": false,
+        "archivingInfo": {
+          "supportsQueryWithHistoricMoment": false,
+          "startArchivingMoment": -1
+        },
+        "supportsCoordinatesQuantization": true,
+        "supportsDynamicLegends": false
+      },
+      "layers": [
+        {
+          "layerId": 30,
+          "layerName": "Unidades Operativas de Planeamento e Gestão",
+          "file": "limites-regulamentares/30-unidades-operativas-de-planeamento-e-gestao.json",
+          "count": 12,
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "layerId": 31,
+          "layerName": "Áreas Urbanas de Génese Ilegal",
+          "file": "limites-regulamentares/31-areas-urbanas-de-genese-ilegal.json",
+          "count": 93,
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "layerId": 32,
+          "layerName": "Áreas de Reabilitação Urbana",
+          "file": "limites-regulamentares/32-areas-de-reabilitacao-urbana.json",
+          "count": 25,
+          "geometryType": "esriGeometryPolygon"
+        }
+      ]
+    }
+  }
+}

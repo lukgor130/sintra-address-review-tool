@@ -146,8 +146,8 @@ class CacheSourceLayerTests(unittest.TestCase):
             sample,
             "fetch_layer_ids",
             return_value=[1, 2, 3, 4, 5],
-        ), mock.patch.object(sample, "get_json") as mocked_get_json:
-            mocked_get_json.side_effect = [
+        ), mock.patch.object(sample, "request_json") as mocked_request_json:
+            mocked_request_json.side_effect = [
                 {"features": [{"attributes": {"OBJECTID": 1}}]},
                 {"features": [{"attributes": {"OBJECTID": 3}}]},
                 {"features": [{"attributes": {"OBJECTID": 5}}]},
@@ -161,13 +161,14 @@ class CacheSourceLayerTests(unittest.TestCase):
             )
 
         self.assertEqual(
-            [call.args[0] for call in mocked_get_json.call_args_list],
+            [call.args[0] for call in mocked_request_json.call_args_list],
             [
                 "https://example.com/arcgis/rest/services/Service/MapServer/12/query",
                 "https://example.com/arcgis/rest/services/Service/MapServer/12/query",
                 "https://example.com/arcgis/rest/services/Service/MapServer/12/query",
             ],
         )
+        self.assertTrue(all(call.kwargs.get("method") == "POST" for call in mocked_request_json.call_args_list))
         self.assertEqual(result["layerName"], "Test Layer")
         self.assertEqual([feature["attributes"]["OBJECTID"] for feature in result["features"]], [1, 3, 5])
 
