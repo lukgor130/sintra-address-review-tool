@@ -101,6 +101,22 @@ Then open:
 Use `scripts/serve_app.py` instead of `python -m http.server` because PMTiles
 requires HTTP byte-range support.
 
+## Verify Deployment
+
+After pushing changes to GitHub Pages, use the live checker to confirm the
+custom domain has actually picked up the new commit:
+
+```bash
+cd "/Users/lukeg/Documents/Personal Projects/sintra-address-review-tool"
+python3 scripts/check_pages_live.py
+```
+
+The check waits for the GitHub Pages build to finish and then verifies:
+
+- the root domain stays blank
+- `/sintratotal/` serves the Sintra Total explorer
+- `/azenhas/` serves the Azenhas map
+
 ## Main Files
 
 - `extract_sample.py`
