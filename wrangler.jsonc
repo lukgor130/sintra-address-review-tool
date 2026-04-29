@@ -1,12 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "sintra-maps-workspace",
+  "name": "verrio-maps-workspace",
   "compatibility_date": "2026-04-28",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": "deploy-root"
   },
   "compatibility_flags": [
     "nodejs_compat"
