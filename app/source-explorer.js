@@ -2,7 +2,7 @@ const SOURCE_BASE = new URL("./data/source-cache/", import.meta.url);
 const MANIFEST_URL = new URL("manifest.json", SOURCE_BASE);
 const BASEMAP_STYLE_URL = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 const EPSG_3763 =
-  "+proj=tmerc +lat_0=39.6666666666667 +lon_0=-8.13190611111111 +k=1 +x_0=180.598 +y_0=-86.99 +ellps=GRS80 +units=m +no_defs";
+  "+proj=tmerc +lat_0=39.6682583333333 +lon_0=-8.13310833333333 +k=1 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs";
 const STORAGE_KEY = "sintra-source-explorer-state-v1";
 
 const proj4Lib = globalThis.proj4;
