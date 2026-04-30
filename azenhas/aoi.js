@@ -45,6 +45,7 @@ const STORAGE_VERSION = 3;
 const STORAGE_KEY = `sintra-aoi-feedback-v${STORAGE_VERSION}:${PACK_ID}:shared`;
 const SESSION_STORAGE_KEY = `sintra-aoi-session-v${STORAGE_VERSION}:${PACK_ID}`;
 const API_BASE = "/api/aoi";
+const API_TIMEOUT_MS = 4000;
 const URL_SESSION_ID = params.get("session") ?? "";
 
 const STATUS_LABELS = {
@@ -204,6 +205,7 @@ let syncState = {
   mode: "loading",
   detail: "Loading shared session…",
 };
+let syncTransport = "unknown";
 
 let pendingParcelIds = new Set();
 let syncTimer = null;
@@ -239,17 +241,24 @@ function apiUrl(action) {
 }
 
 async function apiJson(action, { method = "GET", body } = {}) {
-  const response = await fetch(apiUrl(action), {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`${response.status} ${response.statusText}${text ? `: ${text}` : ""}`);
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  try {
+    const response = await fetch(apiUrl(action), {
+      method,
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new Error(`${response.status} ${response.statusText}${text ? `: ${text}` : ""}`);
+    }
+    return response.json();
+  } finally {
+    globalThis.clearTimeout(timeout);
   }
-  return response.json();
 }
 
 function setSessionState(nextSession, { persistPointer = true } = {}) {
@@ -340,6 +349,7 @@ function updateLocationForSession(sessionId) {
 async function bootstrapSession() {
   try {
     setSyncState("loading", "Loading shared session…");
+    syncTransport = "unknown";
     const payload = await apiJson("bootstrap", {
       method: "POST",
       body: {
@@ -360,6 +370,7 @@ async function bootstrapSession() {
     );
     hydrateRemoteFeedback(payload?.feedback?.parcels ?? payload?.feedback ?? payload?.parcels ?? {});
     feedback.syncedAt = payload?.session?.updatedAt ?? payload?.session?.updated_at ?? nowIso();
+    syncTransport = "remote";
     pendingParcelIds = new Set(
       Object.entries(feedback.parcels)
         .filter(([, item]) => item?.dirty)
@@ -380,12 +391,17 @@ async function bootstrapSession() {
     }
   } catch (error) {
     console.warn("AOI session bootstrap failed", error);
-    setSyncState("offline", "Offline. Using the local draft cache.");
+    syncTransport = "local";
+    setSyncState("offline", "Cloud sync unavailable. Using the local draft cache.");
     renderAll();
   }
 }
 
 async function createPrivateSession() {
+  if (syncTransport !== "remote") {
+    setSyncState("offline", "Cloud sync unavailable. Private sessions are not available right now.");
+    return;
+  }
   const payload = await apiJson("create-session", {
     method: "POST",
     body: {
@@ -498,6 +514,10 @@ function scheduleParcelSync() {
     setSyncState("offline", "Offline. Changes are stored locally.");
     return;
   }
+  if (syncTransport !== "remote") {
+    setSyncState("offline", "Cloud sync unavailable. Changes are stored locally.");
+    return;
+  }
   if (!pendingParcelIds.size) {
     setSyncState("synced", sessionState.id ? "Synced with shared session." : "Working locally.");
     return;
@@ -514,8 +534,12 @@ async function flushParcelSync() {
     setSyncState("offline", "Offline. Changes are stored locally.");
     return;
   }
+  if (syncTransport !== "remote") {
+    setSyncState("offline", "Cloud sync unavailable. Changes are stored locally.");
+    return;
+  }
   if (!sessionState.id) {
-    setSyncState("offline", "Waiting for session sync…");
+    setSyncState("offline", "Local draft cache ready. Cloud sync will resume when connected.");
     return;
   }
 
@@ -699,6 +723,15 @@ function renderMetrics() {
 }
 
 function renderSessionPanel() {
+  if (syncTransport === "local") {
+    sessionStateEl.textContent = "Local draft";
+    sessionDescriptionEl.textContent =
+      "Cloud sync is unavailable right now, so notes stay in this browser until the API comes back.";
+    copySessionLinkEl.disabled = true;
+    newSessionEl.disabled = true;
+    return;
+  }
+
   if (!sessionState.id) {
     sessionStateEl.textContent = "Connecting";
     sessionDescriptionEl.textContent =
@@ -1237,7 +1270,7 @@ newSessionEl.addEventListener("click", () => {
 });
 
 window.addEventListener("online", () => {
-  if (!sessionState.id) {
+  if (syncTransport !== "remote") {
     void bootstrapSession();
     return;
   }
