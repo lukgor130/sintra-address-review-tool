@@ -128,6 +128,7 @@ This writes the deployable site to `deploy-root/`, including:
 - `azenhas/`
 - `sintratotal/`
 - legacy `/app/` redirect shims
+- Cloudflare Pages function bundle files for `/api/aoi`
 
 The deployment bundle intentionally excludes oversized local cache files such as:
 
@@ -173,7 +174,7 @@ Working assumptions for this repo:
 
 - one Cloudflare Pages project serves `maps.verrio.co`
 - apps are exposed by route under that host
-- `/functions` provides the AOI notes API
+- `/functions` provides the AOI notes API and is compiled into the deploy bundle
 - the D1 binding name is `AOI_DB`
 - the root route `/` remains intentionally blank
 - Cloudflare deploys `deploy-root/`, not the raw repo root

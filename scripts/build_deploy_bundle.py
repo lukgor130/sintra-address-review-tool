@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import shutil
+import tempfile
 from pathlib import Path
 
 
@@ -80,6 +82,45 @@ def build_addressreview() -> None:
     write_public_source_cache()
 
 
+def build_pages_functions() -> None:
+    with tempfile.TemporaryDirectory(prefix="aoi-pages-functions-") as tmpdir:
+        tmp_path = Path(tmpdir)
+        worker_js = tmp_path / "_worker.js"
+        routes_json = tmp_path / "_routes.json"
+        worker_config_json = tmp_path / "_worker-config.json"
+        subprocess.run(
+            [
+                "npx",
+                "--yes",
+                "wrangler",
+                "pages",
+                "functions",
+                "build",
+                "functions",
+                "--project-directory",
+                str(ROOT),
+                "--build-output-directory",
+                str(OUTPUT),
+                "--outfile",
+                str(worker_js),
+                "--output-routes-path",
+                str(routes_json),
+                "--output-config-path",
+                str(worker_config_json),
+            ],
+            cwd=ROOT,
+            check=True,
+        )
+        for relative_name in ["_worker.js", "_routes.json", "_worker-config.json"]:
+            copy_file_from_temp(tmp_path / relative_name, relative_name)
+
+
+def copy_file_from_temp(source: Path, relative_path: str) -> None:
+    destination = OUTPUT / relative_path
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+
+
 def main() -> None:
     reset_output()
 
@@ -90,6 +131,7 @@ def main() -> None:
     copy_tree("azenhas")
     copy_tree("sintratotal")
     copy_tree("app")
+    build_pages_functions()
 
     print(f"Wrote deployment bundle to {OUTPUT}")
 

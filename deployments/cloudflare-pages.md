@@ -22,6 +22,7 @@ The legacy `/app/` path should remain a compatibility redirect only and must not
 - Output directory: `deploy-root`
 - Functions directory: `/functions`
 - Wrangler config: `/wrangler.jsonc`
+- The build script also compiles Pages Functions into the output bundle so `/api/aoi` is published with the static site
 
 ## Environment And Bindings
 
