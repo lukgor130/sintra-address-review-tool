@@ -33,30 +33,23 @@
         <section class="group-stack" id="group-stack" aria-label="Layer controls">
           <fieldset class="layer-group">
             <legend>Parcels · Livre + Expectante</legend>
-            <label class="group-toggle">
-              <input type="checkbox" id="parcels-master-toggle" checked />
-              <span>Show parcel dataset</span>
-              <span class="state-chip" id="parcels-master-state">On</span>
-            </label>
             <div class="layer-list">
-              <label class="layer-row">
-                <input type="checkbox" id="parcels-fill-toggle" checked />
-                <span class="layer-swatch layer-swatch--parcel-fill" aria-hidden="true"></span>
+              <div class="layer-row layer-row--static">
+                <span class="layer-swatch layer-swatch--parcel-livre" aria-hidden="true"></span>
                 <span class="layer-copy">
-                  <strong>Parcel fill</strong>
-                  <span>Area surface for the full parcel universe.</span>
+                  <strong>Livre</strong>
+                  <span id="parcel-livre-count">— features</span>
                 </span>
-                <span class="state-chip" id="parcels-fill-state">On</span>
-              </label>
-              <label class="layer-row">
-                <input type="checkbox" id="parcels-outline-toggle" checked />
-                <span class="layer-swatch layer-swatch--parcel-outline" aria-hidden="true"></span>
+                <span class="state-chip">Type</span>
+              </div>
+              <div class="layer-row layer-row--static">
+                <span class="layer-swatch layer-swatch--parcel-expectante" aria-hidden="true"></span>
                 <span class="layer-copy">
-                  <strong>Parcel outline</strong>
-                  <span>Thin boundary line for shape and adjacency checks.</span>
+                  <strong>Expectante</strong>
+                  <span id="parcel-expectante-count">— features</span>
                 </span>
-                <span class="state-chip" id="parcels-outline-state">On</span>
-              </label>
+                <span class="state-chip">Type</span>
+              </div>
             </div>
           </fieldset>
 
@@ -89,12 +82,28 @@
             <strong id="map-title">Loading source cache</strong>
             <span class="map-status" id="map-status">Preparing local layers</span>
           </div>
+          <div class="toolbar-controls" aria-label="Map controls">
+            <label class="toolbar-toggle">
+              <input type="checkbox" id="parcel-visible-toggle" checked />
+              <span class="toolbar-toggle-ui">
+                <span class="toolbar-toggle-dot" aria-hidden="true"></span>
+                <span>Parcels</span>
+              </span>
+            </label>
+            <div class="segmented-control" role="group" aria-label="Basemap mode">
+              <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
+              <button type="button" data-basemap-mode="satellite" aria-pressed="false">
+                Satellite
+              </button>
+            </div>
+          </div>
           <div class="toolbar-actions">
             <button type="button" id="fit-visible-button">Fit visible</button>
             <button type="button" id="clear-selection-button">Clear selection</button>
           </div>
           <div class="legend" aria-label="Layer color legend">
-            <span><i class="legend-swatch legend-swatch--parcel"></i>Parcels</span>
+            <span><i class="legend-swatch legend-swatch--parcel-livre"></i>Livre</span>
+            <span><i class="legend-swatch legend-swatch--parcel-expectante"></i>Expectante</span>
             <span><i class="legend-swatch legend-swatch--uopg"></i>UOPG</span>
             <span><i class="legend-swatch legend-swatch--augi"></i>AUGI</span>
             <span><i class="legend-swatch legend-swatch--aru"></i>ARU</span>
@@ -108,7 +117,7 @@
     <script src="https://cdn.jsdelivr.net/npm/proj4@2.20.2/dist/proj4.min.js"></script>
     <script
       type="module"
-      src="../addressreview/source-explorer.js?v=2026-04-29-projection-fix"
+      src="../addressreview/source-explorer.js?v=2026-04-29-parcel-basemap-toggles"
     ></script>
   </body>
 </html>
