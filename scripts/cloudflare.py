@@ -32,9 +32,21 @@ def require(name: str) -> str:
     return value
 
 
+def api_token() -> str:
+    value = os.environ.get("CF_API_TOKEN") or os.environ.get("CLOUDFLARE_API_TOKEN")
+    if not value:
+        print(
+            "Missing required environment variable: CF_API_TOKEN",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
+    os.environ.setdefault("CF_API_TOKEN", value)
+    return value
+
+
 def request_json(url: str, method: str = "GET", data: dict | None = None) -> dict:
     headers = {
-        "Authorization": f"Bearer {require('CF_API_TOKEN')}",
+        "Authorization": f"Bearer {api_token()}",
         "Content-Type": "application/json",
     }
     body = None if data is None else json.dumps(data).encode("utf-8")

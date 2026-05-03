@@ -131,7 +131,6 @@ def main() -> None:
     copy_tree("azenhas")
     copy_tree("sintratotal")
     copy_tree("app")
-    build_pages_functions()
 
     print(f"Wrote deployment bundle to {OUTPUT}")
 
