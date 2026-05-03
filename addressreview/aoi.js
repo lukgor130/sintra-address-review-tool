@@ -49,20 +49,16 @@ const URL_SESSION_ID = params.get("session") ?? "";
 
 const STATUS_LABELS = {
   unknown: "Open",
-  owner_known: "Knows owner",
-  network_known: "Knows someone linked",
   possible_lead: "Possible lead",
-  needs_research: "Needs research",
-  no_local_lead: "No local lead",
+  definite_lead: "Definite lead",
+  no_local_lead: "No lead",
 };
 
 const STATUS_ORDER = {
-  owner_known: 0,
-  network_known: 1,
-  possible_lead: 2,
-  needs_research: 3,
-  unknown: 4,
-  no_local_lead: 5,
+  possible_lead: 0,
+  definite_lead: 1,
+  unknown: 2,
+  no_local_lead: 3,
 };
 
 const progressGridEl = document.querySelector("#metric-strip");
@@ -79,7 +75,6 @@ const parcelSummaryEl = document.querySelector("#parcel-summary");
 const knowledgeStatusEl = document.querySelector("#knowledge-status");
 const leadNameEl = document.querySelector("#lead-name");
 const contactTrailEl = document.querySelector("#contact-trail");
-const confidenceRowEl = document.querySelector("#confidence-row");
 const parcelNotesEl = document.querySelector("#parcel-notes");
 const previousParcelEl = document.querySelector("#previous-parcel");
 const nextParcelEl = document.querySelector("#next-parcel");
@@ -117,6 +112,24 @@ function normalizeText(value) {
   return String(value ?? "").trim().toLowerCase();
 }
 
+function normalizeStatus(value) {
+  switch (String(value ?? "").trim()) {
+    case "owner_known":
+    case "network_known":
+    case "definite_lead":
+      return "definite_lead";
+    case "possible_lead":
+    case "needs_research":
+      return "possible_lead";
+    case "no_local_lead":
+      return "no_local_lead";
+    case "unknown":
+    case "":
+    default:
+      return "unknown";
+  }
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -146,14 +159,28 @@ function loadFeedback(storageKey = STORAGE_KEY) {
   const fallback = createEmptyFeedback();
   try {
     const parsed = JSON.parse(localStorage.getItem(storageKey) || "{}");
-    return {
+    return normalizeFeedbackState({
       ...fallback,
       ...parsed,
       parcels: parsed?.parcels && typeof parsed.parcels === "object" ? parsed.parcels : {},
-    };
+    });
   } catch {
     return fallback;
   }
+}
+
+function normalizeFeedbackState(state) {
+  const next = {
+    ...state,
+    parcels: {},
+  };
+  for (const [key, value] of Object.entries(state?.parcels ?? {})) {
+    next.parcels[key] = {
+      ...value,
+      knowledgeStatus: normalizeStatus(value?.knowledgeStatus),
+    };
+  }
+  return next;
 }
 
 function persistFeedback(storageKey = STORAGE_KEY) {
@@ -185,7 +212,7 @@ let feedback = loadFeedback(activeStorageKey);
 
 function setStorageKey(sessionId, isDefault = false) {
   activeStorageKey = sessionStorageKey(sessionId, isDefault);
-  feedback = loadFeedback(activeStorageKey);
+  feedback = normalizeFeedbackState(loadFeedback(activeStorageKey));
 }
 
 function persistSessionPointer(sessionId) {
@@ -271,7 +298,7 @@ function normalizeParcelFeedback(data, parcel) {
   return {
     sourceObjectId: Number(data?.sourceObjectId ?? parcel?.sourceObjectId ?? parcelObjectId),
     parcelObjectId,
-    knowledgeStatus: String(data?.knowledgeStatus ?? ""),
+    knowledgeStatus: normalizeStatus(data?.knowledgeStatus),
     leadName: String(data?.leadName ?? ""),
     contactTrail: String(data?.contactTrail ?? ""),
     confidence: String(data?.confidence ?? ""),
@@ -307,7 +334,7 @@ function serializeParcelFeedback(fb, parcel) {
   return {
     sourceObjectId,
     parcelObjectId: Number(fb?.parcelObjectId ?? parcel?.objectId ?? sourceObjectId),
-    knowledgeStatus: String(fb?.knowledgeStatus ?? ""),
+    knowledgeStatus: normalizeStatus(fb?.knowledgeStatus),
     leadName: String(fb?.leadName ?? ""),
     contactTrail: String(fb?.contactTrail ?? ""),
     confidence: String(fb?.confidence ?? ""),
@@ -439,7 +466,7 @@ function getParcelFeedback(parcel) {
   feedback.parcels[key] ??= {
     sourceObjectId: parcel.sourceObjectId,
     parcelObjectId: parcel.objectId,
-    knowledgeStatus: "",
+    knowledgeStatus: "unknown",
     leadName: "",
     contactTrail: "",
     confidence: "",
@@ -452,11 +479,11 @@ function getParcelFeedback(parcel) {
 }
 
 function parcelStatus(parcel) {
-  return getParcelFeedback(parcel).knowledgeStatus || "unknown";
+  return normalizeStatus(getParcelFeedback(parcel).knowledgeStatus);
 }
 
 function actionable(parcel) {
-  return ["owner_known", "network_known", "possible_lead"].includes(parcelStatus(parcel));
+  return ["possible_lead", "definite_lead"].includes(parcelStatus(parcel));
 }
 
 function parcelWasTouched(parcel) {
@@ -676,14 +703,12 @@ function parcelCardMarkup(parcel, index, total) {
 function renderMetrics() {
   const reviewed = parcels.filter((parcel) => parcelWasTouched(parcel)).length;
   const leads = parcels.filter((parcel) => actionable(parcel)).length;
-  const strong = parcels.filter(
-    (parcel) => actionable(parcel) && getParcelFeedback(parcel).confidence === "high",
-  ).length;
+  const definite = parcels.filter((parcel) => parcelStatus(parcel) === "definite_lead").length;
 
   progressGridEl.innerHTML = [
     ["Reviewed", `${reviewed}/${parcels.length}`],
     ["Actionable", leads],
-    ["High confidence", strong],
+    ["Definite", definite],
   ]
     .map(
       ([label, value]) => `
@@ -734,9 +759,6 @@ function renderParcelEditor(parcel, visible) {
     knowledgeStatusEl.querySelectorAll("[data-status]").forEach((button) => {
       button.classList.remove("is-active");
     });
-    confidenceRowEl.querySelectorAll("[data-confidence]").forEach((button) => {
-      button.classList.remove("is-active");
-    });
     return;
   }
 
@@ -767,9 +789,6 @@ function renderParcelEditor(parcel, visible) {
 
   knowledgeStatusEl.querySelectorAll("[data-status]").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.status === status);
-  });
-  confidenceRowEl.querySelectorAll("[data-confidence]").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.confidence === fb.confidence);
   });
 }
 
@@ -806,7 +825,6 @@ function exportRows() {
       statusLabel: STATUS_LABELS[parcelStatus(parcel)],
       leadName: fb.leadName,
       contactTrail: fb.contactTrail,
-      confidence: fb.confidence,
       notes: fb.notes,
       reviewedAt: fb.reviewedAt,
       selectedAddressPorta: parcel.selectedAddress?.porta ?? "",
@@ -890,15 +908,13 @@ function addMapOverlays() {
       "fill-color": [
         "match",
         ["coalesce", ["feature-state", "status"], "unknown"],
-        "owner_known",
-        "#be6d3e",
-        "network_known",
-        "#2e6f73",
-        "possible_lead",
-        "#d7a64b",
-        "no_local_lead",
-        "#605b7b",
-        "#eef0ea",
+                "possible_lead",
+                "#d7a64b",
+                "definite_lead",
+                "#be6d3e",
+                "no_local_lead",
+                "#605b7b",
+                "#eef0ea",
       ],
       "fill-opacity": [
         "case",
@@ -920,12 +936,10 @@ function addMapOverlays() {
         [
           "match",
           ["coalesce", ["feature-state", "status"], "unknown"],
-          "owner_known",
-          "#8d4925",
-          "network_known",
-          "#1b484b",
           "possible_lead",
           "#996c18",
+          "definite_lead",
+          "#8d4925",
           "no_local_lead",
           "#4f4b66",
           "#8d968f",
@@ -1068,9 +1082,9 @@ function parcelBounds(parcel) {
 
 function mapPadding() {
   if (globalThis.innerWidth < 1120) {
-    return { top: 44, right: 44, bottom: 44, left: 44 };
+    return { top: 36, right: 36, bottom: 36, left: 36 };
   }
-  return { top: 56, right: 56, bottom: 56, left: 56 };
+  return { top: 44, right: 44, bottom: 44, left: 44 };
 }
 
 function renderAll() {
@@ -1114,19 +1128,6 @@ knowledgeStatusEl.addEventListener("click", (event) => {
   }
   const fb = getParcelFeedback(parcel);
   fb.knowledgeStatus = button.dataset.status;
-  markReviewed(parcel);
-  saveFeedback();
-  renderAll();
-});
-
-confidenceRowEl.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-confidence]");
-  const parcel = activeParcel();
-  if (!button || !parcel) {
-    return;
-  }
-  const fb = getParcelFeedback(parcel);
-  fb.confidence = button.dataset.confidence;
   markReviewed(parcel);
   saveFeedback();
   renderAll();

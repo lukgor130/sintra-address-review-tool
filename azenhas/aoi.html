@@ -40,9 +40,8 @@
               </button>
             </div>
             <div class="legend" aria-label="Knowledge status legend">
-              <span><i class="dot dot--owner"></i>Owner</span>
-              <span><i class="dot dot--network"></i>Linked</span>
-              <span><i class="dot dot--possible"></i>Maybe</span>
+              <span><i class="dot dot--possible"></i>Possible lead</span>
+              <span><i class="dot dot--definite"></i>Definite lead</span>
               <span><i class="dot dot--open"></i>Open</span>
               <span><i class="dot dot--none"></i>No lead</span>
             </div>
@@ -138,16 +137,14 @@
             <div class="field-group">
               <span class="field-label">What does the local contact know?</span>
               <div class="choice-row" id="knowledge-status">
-                <button type="button" data-status="owner_known">Knows owner</button>
-                <button type="button" data-status="network_known">Knows someone linked</button>
                 <button type="button" data-status="possible_lead">Possible lead</button>
-                <button type="button" data-status="needs_research">Needs research</button>
+                <button type="button" data-status="definite_lead">Definite lead</button>
                 <button type="button" data-status="no_local_lead">No lead</button>
               </div>
             </div>
 
             <div class="field-group">
-              <label for="lead-name">Lead name or owner clue</label>
+              <label for="lead-name">Lead name</label>
               <input
                 id="lead-name"
                 type="text"
@@ -156,7 +153,7 @@
             </div>
 
             <div class="field-group">
-              <label for="contact-trail">How do we reach or verify this lead?</label>
+              <label for="contact-trail">Contact details</label>
               <input
                 id="contact-trail"
                 type="text"
@@ -166,21 +163,12 @@
           </div>
 
           <div class="editor-panel__column editor-panel__column--side">
-            <div class="field-group">
-              <span class="field-label">Confidence</span>
-              <div class="choice-row compact" id="confidence-row">
-                <button type="button" data-confidence="high">High</button>
-                <button type="button" data-confidence="medium">Medium</button>
-                <button type="button" data-confidence="low">Low</button>
-              </div>
-            </div>
-
             <div class="field-group editor-panel__notes">
               <label for="parcel-notes">Notes</label>
               <textarea
                 id="parcel-notes"
                 rows="4"
-                placeholder="Anything useful: local nickname, family link, whether the plot feels abandoned, likely gatekeeper..."
+                placeholder="Anything useful: local nickname, family link, gatekeeper, access notes..."
               ></textarea>
             </div>
 
@@ -195,6 +183,6 @@
 
     <script src="./vendor/maplibre-gl.js"></script>
     <script src="./vendor/pmtiles.js"></script>
-    <script type="module" src="./aoi.js?v=2026-04-29-persistent-notes"></script>
+    <script type="module" src="./aoi.js?v=2026-05-03-compact-review"></script>
   </body>
 </html>
