@@ -1,13 +1,13 @@
 # DNS And Publishing Map
 
-Preferred publishing model: Option A, with `maps.verrio.co` as the index and route-based apps beneath it.
+Preferred publishing model: Worker route on `maps.verrio.co/*`, with route-based apps beneath it.
 
 | App name | Local folder | Public URL | Cloudflare project | GitHub branch | Build command | Output directory | DNS record | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Blank root | `/` | `https://maps.verrio.co/` | `verrio-maps` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co` only; do not edit until confirmed | Active | Root must stay intentionally blank and must not expose navigation, branding, or app discovery. |
-| Address Review | `/addressreview` | `https://maps.verrio.co/addressreview/` | `verrio-maps` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co` route only | Active | This is the only supported public route for the address review app. |
-| Azenhas | `/azenhas` | `https://maps.verrio.co/azenhas/` | `verrio-maps` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co` route only | Active legacy route | Working app preserved in place to avoid breaking the current deployment before a dedicated route migration. |
-| Sintra Total | `/sintratotal` | `https://maps.verrio.co/sintratotal/` | `verrio-maps` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co` route only | Active legacy route | Depends on shared explorer assets under `/addressreview`. |
+| Blank root | `/` | `https://maps.verrio.co/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active | Root must stay intentionally blank and must not expose navigation, branding, or app discovery. |
+| Address Review | `/addressreview` | `https://maps.verrio.co/addressreview/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active | This is the supported public route for the address review app. |
+| Azenhas | `/azenhas` | `https://maps.verrio.co/azenhas/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active legacy route | Working app preserved in place to avoid breaking the current deployment before a dedicated route migration. |
+| Sintra Total | `/sintratotal` | `https://maps.verrio.co/sintratotal/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active legacy route | Depends on shared explorer assets under `/addressreview`. |
 
 # Notes
 

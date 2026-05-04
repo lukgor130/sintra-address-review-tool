@@ -1,10 +1,10 @@
-# Cloudflare Pages Runbook
+# Cloudflare Worker Route Runbook
 
 ## Project
 
-- Serving target for `maps.verrio.co`: `verrio-maps`
-- Prepared model in this repository: one Cloudflare Pages project serving `maps.verrio.co`
-- Routing model: Option A, route-based apps under a single host
+- Serving target for `maps.verrio.co`: `verrio-maps-workspace`
+- Prepared model in this repository: one Cloudflare Worker serving static assets for `maps.verrio.co`
+- Routing model: Worker route on `maps.verrio.co/*`, with route-based apps under a single host
 
 ## Public Routes
 
@@ -20,9 +20,8 @@ The legacy `/app/` path should remain a compatibility redirect only and must not
 
 - Build command: `python3 scripts/build_deploy_bundle.py`
 - Output directory: `deploy-root`
-- Functions directory: `/functions`
 - Wrangler config: `/wrangler.jsonc`
-- The build script also compiles Pages Functions into the output bundle so `/api/aoi` is published with the static site
+- The build script copies the static app bundle into the worker assets directory
 
 ## Environment And Bindings
 

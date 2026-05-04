@@ -94,22 +94,14 @@
             <h2>Session</h2>
             <span class="pill" id="session-state">Loading</span>
           </div>
-          <p id="session-description">
+          <p id="session-description" class="session-panel__note">
             Shared notes from this AOI load for everyone. Open the same link on another device to
             continue the same review.
           </p>
-          <div class="export-actions">
+          <strong id="save-state" class="session-panel__status">No saved notes yet</strong>
+          <div class="export-actions session-panel__actions">
             <button type="button" id="copy-session-link">Copy link</button>
             <button type="button" class="ghost-button" id="new-session">New session</button>
-          </div>
-        </section>
-
-        <section class="export-panel">
-          <div>
-            <p class="eyebrow">Export</p>
-            <strong id="save-state">No saved notes yet</strong>
-          </div>
-          <div class="export-actions">
             <button type="button" id="export-json">Export JSON</button>
             <button type="button" id="export-csv">Export CSV</button>
             <button type="button" class="danger-button" id="clear-feedback">Reset local cache</button>
@@ -143,22 +135,24 @@
               </div>
             </div>
 
-            <div class="field-group">
-              <label for="lead-name">Lead name</label>
-              <input
-                id="lead-name"
-                type="text"
-                placeholder="Person, family name, business, or landmark clue"
-              />
-            </div>
+            <div class="lead-grid">
+              <div class="field-group">
+                <label class="sr-only" for="lead-name">Lead name</label>
+                <input
+                  id="lead-name"
+                  type="text"
+                  placeholder="Person, family name, business, or landmark clue"
+                />
+              </div>
 
-            <div class="field-group">
-              <label for="contact-trail">Contact details</label>
-              <input
-                id="contact-trail"
-                type="text"
-                placeholder="Neighbour, café owner, WhatsApp, old owner, local broker..."
-              />
+              <div class="field-group">
+                <label class="sr-only" for="contact-trail">Contact details</label>
+                <input
+                  id="contact-trail"
+                  type="text"
+                  placeholder="Neighbour, café owner, WhatsApp, old owner, local broker..."
+                />
+              </div>
             </div>
           </div>
 

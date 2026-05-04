@@ -8,6 +8,12 @@
   "assets": {
     "directory": "deploy-root"
   },
+  "routes": [
+    {
+      "pattern": "maps.verrio.co/*",
+      "zone_name": "verrio.co"
+    }
+  ],
   "compatibility_flags": [
     "nodejs_compat"
   ]
