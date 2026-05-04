@@ -15,4 +15,5 @@ Preferred publishing model: Worker route on `maps.verrio.co/*`, with route-based
 - Do not edit `verrio.co`, `www.verrio.co`, or apex website records from this repository workflow.
 - Legacy compatibility route: `/app/` redirects to `/addressreview/` and should not be published, linked, or documented as a primary app URL.
 - Publish from `deploy-root/` so oversized local cache files are not shipped to Cloudflare.
+- AOI routes that save parcel notes require the Worker `AOI_DB` D1 binding in addition to static asset serving.
 - Update this file every time a public URL, output directory, branch rule, or Cloudflare target changes.

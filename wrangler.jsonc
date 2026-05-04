@@ -1,12 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "verrio-maps-workspace",
+  "main": "src/worker.js",
   "compatibility_date": "2026-04-28",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "deploy-root"
+    "directory": "deploy-root",
+    "binding": "ASSETS"
   },
   "routes": [
     {

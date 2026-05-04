@@ -3,7 +3,7 @@
 ## Project
 
 - Serving target for `maps.verrio.co`: `verrio-maps-workspace`
-- Prepared model in this repository: one Cloudflare Worker serving static assets for `maps.verrio.co`
+- Prepared model in this repository: one Cloudflare Worker serving static assets and `/api/aoi` for `maps.verrio.co`
 - Routing model: Worker route on `maps.verrio.co/*`, with route-based apps under a single host
 
 ## Public Routes
@@ -26,8 +26,23 @@ The legacy `/app/` path should remain a compatibility redirect only and must not
 ## Environment And Bindings
 
 - Required for shared AOI notes API: D1 binding named `AOI_DB`
+- Required for static assets: Worker Assets binding named `ASSETS`
 - Local Cloudflare helper variables live in `.env.cloudflare.local`
 - Do not commit secrets or dashboard-only IDs into tracked files unless explicitly intended
+
+Before deploying AOI V2, run:
+
+```bash
+python3 scripts/build_deploy_bundle.py
+npx wrangler deploy --dry-run
+```
+
+The dry run must list both:
+
+- `env.ASSETS`
+- `env.AOI_DB`
+
+If `AOI_DB` is missing, the app will render but shared parcel notes will fall back to local browser storage.
 
 ## Safe DNS Edits
 

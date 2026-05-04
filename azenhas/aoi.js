@@ -46,6 +46,7 @@ const STORAGE_KEY = `sintra-aoi-feedback-v${STORAGE_VERSION}:${PACK_ID}:shared`;
 const SESSION_STORAGE_KEY = `sintra-aoi-session-v${STORAGE_VERSION}:${PACK_ID}`;
 const API_BASE = "/api/aoi";
 const API_TIMEOUT_MS = 4000;
+const SYNC_DEBOUNCE_MS = 700;
 const URL_SESSION_ID = params.get("session") ?? "";
 
 const STATUS_LABELS = {
@@ -95,7 +96,7 @@ const editorPositionEl = document.querySelector("#parcel-position");
 const editorSummaryEl = document.querySelector("#parcel-summary");
 
 datasetTitleEl.textContent = manifest.name;
-datasetDescriptionEl.textContent = `${manifest.parcelCount} plots in this local map pack. The basemap, labels, parcel geometry, and review notes load locally, with shared notes syncing through Cloudflare when available.`;
+datasetDescriptionEl.textContent = `${manifest.parcelCount} plots · shared cloud review · local map pack`;
 basemapStatusEl.hidden = false;
 basemapStatusEl.textContent =
   basemapMode === "satellite" ? `${basemapModeLabel.satellite} + labels` : `${basemapModeLabel.street} basemap`;
@@ -226,6 +227,7 @@ function setSyncState(mode, detail) {
   syncState = { mode, detail };
   syncStateEl.textContent = detail;
   syncStateEl.dataset.syncState = mode;
+  sessionStateEl.dataset.state = mode;
 }
 
 let syncState = {
@@ -254,6 +256,12 @@ const parcels = parcelsGeojson.features.map((feature) => ({
 }));
 
 const parcelsById = new Map(parcels.map((parcel) => [parcel.objectId, parcel]));
+const parcelsBySourceId = new Map(parcels.map((parcel) => [parcel.sourceObjectId, parcel]));
+
+function parcelByAnyId(id) {
+  const numericId = Number(id);
+  return parcelsById.get(numericId) ?? parcelsBySourceId.get(numericId) ?? null;
+}
 
 let activeParcelId = parcels[0]?.objectId ?? null;
 let mapLoaded = false;
@@ -328,7 +336,7 @@ function hydrateRemoteFeedback(rows) {
     return;
   }
   for (const [key, value] of Object.entries(rows)) {
-    const parcel = parcelsById.get(parcelIdFromFeedbackKey(key));
+    const parcel = parcelByAnyId(parcelIdFromFeedbackKey(key));
     const normalized = normalizeParcelFeedback(value, parcel);
     const local = feedback.parcels[String(normalized.sourceObjectId)] ?? feedback.parcels[String(normalized.parcelObjectId)];
     if (local?.dirty && (!normalized.updatedAt || (local.updatedAt ?? "") >= normalized.updatedAt)) {
@@ -506,7 +514,7 @@ function parcelWasTouched(parcel) {
   const item = getParcelFeedback(parcel);
   return Boolean(
     item.reviewedAt ||
-      item.knowledgeStatus ||
+      normalizeStatus(item.knowledgeStatus) !== "unknown" ||
       item.leadName.trim() ||
       item.contactTrail.trim() ||
       item.confidence ||
@@ -526,7 +534,7 @@ function queueParcelSync(parcelId) {
   if (parcelId == null) {
     return;
   }
-  const parcel = parcelsById.get(Number(parcelId));
+  const parcel = parcelByAnyId(parcelId);
   if (!parcel) {
     return;
   }
@@ -535,7 +543,7 @@ function queueParcelSync(parcelId) {
   scheduleParcelSync();
 }
 
-function scheduleParcelSync() {
+function scheduleParcelSync({ immediate = false } = {}) {
   clearTimeout(syncTimer);
   if (!navigator.onLine) {
     setSyncState("offline", "Offline. Changes are stored locally.");
@@ -550,7 +558,13 @@ function scheduleParcelSync() {
     return;
   }
   setSyncState("saving", `Saving ${pendingParcelIds.size} change${pendingParcelIds.size === 1 ? "" : "s"}…`);
-  void flushParcelSync();
+  if (immediate) {
+    void flushParcelSync();
+    return;
+  }
+  syncTimer = globalThis.setTimeout(() => {
+    void flushParcelSync();
+  }, SYNC_DEBOUNCE_MS);
 }
 
 async function flushParcelSync() {
@@ -573,7 +587,7 @@ async function flushParcelSync() {
   syncInFlight = true;
   const parcelIds = [...pendingParcelIds];
   const rows = parcelIds
-    .map((id) => parcelsById.get(Number(id)))
+    .map((id) => parcelsBySourceId.get(Number(id)))
     .filter(Boolean)
     .map((parcel) => {
       const item = getParcelFeedback(parcel);
@@ -605,11 +619,11 @@ async function flushParcelSync() {
       const item = feedback.parcels[String(row.parcelId)];
       if (item) {
         item.dirty = false;
-        item.updatedAt = payload?.syncedAt ?? nowIso();
+        item.updatedAt = payload?.feedback?.syncedAt ?? payload?.syncedAt ?? nowIso();
       }
       pendingParcelIds.delete(String(row.parcelId));
     }
-    feedback.syncedAt = payload?.syncedAt ?? nowIso();
+    feedback.syncedAt = payload?.feedback?.syncedAt ?? payload?.syncedAt ?? nowIso();
     persistFeedback(activeStorageKey);
     setSyncState("synced", `Synced ${new Date(feedback.syncedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
   } catch (error) {
@@ -749,9 +763,10 @@ function renderMetrics() {
 
 function renderSessionPanel() {
   if (syncTransport === "local") {
-    sessionStateEl.textContent = "Local draft";
+    sessionStateEl.textContent = "Local only";
+    sessionStateEl.dataset.state = "offline";
     sessionDescriptionEl.textContent =
-      "Cloud sync is unavailable right now, so notes stay in this browser until the API comes back.";
+      "Cloud sync is unavailable. Edits are held in this browser and will retry automatically.";
     copySessionLinkEl.disabled = true;
     newSessionEl.disabled = true;
     return;
@@ -759,17 +774,19 @@ function renderSessionPanel() {
 
   if (!sessionState.id) {
     sessionStateEl.textContent = "Connecting";
+    sessionStateEl.dataset.state = "loading";
     sessionDescriptionEl.textContent =
-      "Loading shared notes for this AOI. If the API is unavailable, the browser keeps your local draft.";
+      "Opening the shared cloud review.";
     copySessionLinkEl.disabled = true;
     newSessionEl.disabled = true;
     return;
   }
 
-  sessionStateEl.textContent = sessionState.isDefault ? "Shared session" : "Private session";
+  sessionStateEl.textContent = sessionState.isDefault ? "Shared cloud" : "Private";
+  sessionStateEl.dataset.state = syncState.mode;
   sessionDescriptionEl.textContent = sessionState.isDefault
-    ? "Anyone opening the map without a session link sees this shared review."
-    : `This link opens a private session: ${sessionState.id.slice(0, 8)}…`;
+    ? "Every visitor to this AOI sees the same saved notes."
+    : `Private review ${sessionState.id.slice(0, 8)}...`;
   copySessionLinkEl.disabled = false;
   newSessionEl.disabled = false;
 }
@@ -812,8 +829,8 @@ function renderParcelEditor(parcel, visible) {
 
   parcelSummaryEl.innerHTML = `
     <strong>${escapeHtml(parcel.tipologia)} · ${parcel.areaM2.toLocaleString()} m²</strong>
+    <p>${escapeHtml(cue)}</p>
     <p>${escapeHtml(parcel.qualificacaoSolo)} · ${escapeHtml(parcel.freguesia)}</p>
-    <p><strong>Address cue:</strong> ${escapeHtml(cue)}</p>
   `;
 
   leadNameEl.value = fb.leadName;
@@ -1163,6 +1180,7 @@ knowledgeStatusEl.addEventListener("click", (event) => {
   fb.knowledgeStatus = button.dataset.status;
   markReviewed(parcel);
   saveFeedback();
+  scheduleParcelSync({ immediate: true });
   renderAll();
 });
 
@@ -1182,6 +1200,9 @@ for (const element of [leadNameEl, contactTrailEl, parcelNotesEl]) {
     saveFeedback();
     renderMetrics();
     renderParcelList(ensureActiveParcel());
+  });
+  element.addEventListener("change", () => {
+    scheduleParcelSync({ immediate: true });
   });
 }
 
@@ -1204,6 +1225,7 @@ nextParcelEl.addEventListener("click", () => {
   if (parcel) {
     markReviewed(parcel);
     saveFeedback();
+    scheduleParcelSync({ immediate: true });
   }
   const index = visible.findIndex((item) => item.objectId === activeParcelId);
   const next = visible[Math.min(index + 1, visible.length - 1)];
@@ -1280,4 +1302,10 @@ window.addEventListener("online", () => {
 
 window.addEventListener("offline", () => {
   setSyncState("offline", "Offline. Changes are stored locally.");
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && pendingParcelIds.size) {
+    scheduleParcelSync({ immediate: true });
+  }
 });

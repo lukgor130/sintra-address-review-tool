@@ -168,16 +168,20 @@ python3 scripts/build_aoi_pack.py \
 
 ## Deployment
 
-Target deployment platform: Cloudflare Pages with Pages Functions.
+Target deployment platform: Cloudflare Workers with Worker Assets and a D1-backed AOI notes API.
 
 Working assumptions for this repo:
 
 - one Cloudflare Pages project serves `maps.verrio.co`
 - apps are exposed by route under that host
-- `/functions` provides the AOI notes API and is compiled into the deploy bundle
+- `src/worker.js` serves static assets and routes `/api/aoi` to the AOI notes API
+- `functions/api/aoi.js` stores the mutable parcel notes layer in D1
 - the D1 binding name is `AOI_DB`
 - the root route `/` remains intentionally blank
 - Cloudflare deploys `deploy-root/`, not the raw repo root
+
+Before deploying, `npx wrangler deploy --dry-run` must list both `env.ASSETS` and `env.AOI_DB`.
+If `AOI_DB` is missing, the AOI app can render but shared notes will stay in browser fallback mode.
 
 Before deployment:
 

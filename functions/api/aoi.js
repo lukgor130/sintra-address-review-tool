@@ -1,4 +1,14 @@
 const DEFAULT_SESSION_SLUG = "default";
+const MAX_TEXT_LENGTH = 2000;
+const MAX_ROWS_PER_WRITE = 100;
+
+const VALID_STATUSES = new Set([
+  "",
+  "unknown",
+  "possible_lead",
+  "definite_lead",
+  "no_local_lead",
+]);
 
 function json(payload, init = {}) {
   const headers = new Headers(init.headers || {});
@@ -26,6 +36,15 @@ function slugify(value) {
 
 function randomId() {
   return globalThis.crypto?.randomUUID?.() ?? `sess_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+}
+
+function limitText(value, maxLength = MAX_TEXT_LENGTH) {
+  return String(value ?? "").slice(0, maxLength);
+}
+
+function normalizeStatus(value) {
+  const status = String(value ?? "").trim();
+  return VALID_STATUSES.has(status) ? status : "unknown";
 }
 
 function dbFromEnv(env) {
@@ -73,11 +92,11 @@ function normalizeFeedback(payload, parcelId) {
   return {
     sourceObjectId: Number(payload?.sourceObjectId ?? safeParcelId),
     parcelObjectId: Number(payload?.parcelObjectId ?? safeParcelId),
-    knowledgeStatus: String(payload?.knowledgeStatus ?? ""),
-    leadName: String(payload?.leadName ?? ""),
-    contactTrail: String(payload?.contactTrail ?? ""),
-    confidence: String(payload?.confidence ?? ""),
-    notes: String(payload?.notes ?? ""),
+    knowledgeStatus: normalizeStatus(payload?.knowledgeStatus),
+    leadName: limitText(payload?.leadName, 240),
+    contactTrail: limitText(payload?.contactTrail, 500),
+    confidence: limitText(payload?.confidence, 80),
+    notes: limitText(payload?.notes, MAX_TEXT_LENGTH),
     reviewedAt: payload?.reviewedAt ? String(payload.reviewedAt) : null,
     updatedAt: payload?.updatedAt ? String(payload.updatedAt) : now,
   };
@@ -292,6 +311,10 @@ export async function onRequest(context) {
   const title = url.searchParams.get("title") || "AOI";
 
   try {
+    if (action === "health" && request.method === "GET") {
+      return json({ ok: true, storage: "d1", checkedAt: nowIso() });
+    }
+
     if (action === "bootstrap" && request.method === "POST") {
       const body = await parseBody(request);
       const requestedSessionId = String(body.sessionId || "").trim();
@@ -330,7 +353,7 @@ export async function onRequest(context) {
     if (action === "upsert" && request.method === "POST") {
       const body = await parseBody(request);
       const sessionId = String(body.sessionId || "").trim();
-      const rows = Array.isArray(body.rows) ? body.rows : [];
+      const rows = Array.isArray(body.rows) ? body.rows.slice(0, MAX_ROWS_PER_WRITE) : [];
       if (!sessionId) {
         return text("Missing sessionId.", 400);
       }

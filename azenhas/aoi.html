@@ -4,57 +4,53 @@
     <meta charset="utf-8" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sintra Local Knowledge Map</title>
+    <title>Azenhas Field Review V2</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='10' fill='%23193130'/%3E%3Cpath d='M7 23h18' stroke='%23f2ecdf' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M11 21l5-10 5 10' fill='none' stroke='%23c56e39' stroke-width='2.2' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='14' r='2.2' fill='%237eb1b0'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23182728'/%3E%3Cpath d='M7 22h18' stroke='%23f4f1e8' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M11 20l5-10 5 10' fill='none' stroke='%23b86b3c' stroke-width='2.2' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='14' r='2.2' fill='%232f7d80'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./vendor/maplibre-gl.css" />
     <link rel="stylesheet" href="./aoi.css" />
   </head>
   <body>
-    <div class="intel-shell">
-      <aside class="intel-panel">
-        <header class="hero-panel">
-          <p class="eyebrow">Local Knowledge Review</p>
-          <h1 id="dataset-title">Area of interest</h1>
-          <p id="dataset-description">
-            Use the map with someone who knows the area well, mark what they know about each plot,
-            and export a clean outreach lead sheet afterwards.
-          </p>
+    <div class="review-shell">
+      <aside class="queue-panel" aria-label="Parcel queue">
+        <header class="tool-header">
+          <div>
+            <p class="eyebrow">Field Review V2</p>
+            <h1 id="dataset-title">Azenhas do Mar</h1>
+          </div>
+          <span class="sync-pill" id="session-state">Connecting</span>
         </header>
+
+        <p class="tool-summary" id="dataset-description"></p>
 
         <section class="metric-strip" id="metric-strip" aria-label="Review progress"></section>
 
-        <section class="field-view-panel" aria-label="Field view controls">
-          <div class="field-view-card">
-            <div>
-              <p class="eyebrow">Field view</p>
-              <strong id="map-title">Loading map</strong>
-              <span class="map-status" id="basemap-status">Offline pack</span>
-            </div>
-            <div class="basemap-toggle" role="tablist" aria-label="Basemap style">
-              <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
-              <button type="button" data-basemap-mode="satellite" aria-pressed="false">
-                Satellite
-              </button>
-            </div>
-            <div class="legend" aria-label="Knowledge status legend">
-              <span><i class="dot dot--possible"></i>Possible lead</span>
-              <span><i class="dot dot--definite"></i>Definite lead</span>
-              <span><i class="dot dot--open"></i>Open</span>
-              <span><i class="dot dot--none"></i>No lead</span>
-            </div>
+        <section class="map-controls" aria-label="Map controls">
+          <div class="map-controls__title">
+            <span id="map-title">Loading map</span>
+            <span class="map-status" id="basemap-status">Street basemap</span>
+          </div>
+          <div class="basemap-toggle" role="tablist" aria-label="Basemap style">
+            <button type="button" data-basemap-mode="street" aria-pressed="true">Street</button>
+            <button type="button" data-basemap-mode="satellite" aria-pressed="false">Satellite</button>
+          </div>
+          <div class="legend" aria-label="Lead status legend">
+            <span><i class="dot dot--possible"></i>Possible</span>
+            <span><i class="dot dot--definite"></i>Definite</span>
+            <span><i class="dot dot--none"></i>No lead</span>
+            <span><i class="dot dot--open"></i>Open</span>
           </div>
         </section>
 
         <section class="control-panel">
           <div class="field-group">
-            <label for="parcel-search">Search plots</label>
+            <label for="parcel-search">Search</label>
             <input
               id="parcel-search"
               type="search"
-              placeholder="Parcel ID, road, locality, lead name"
+              placeholder="Parcel, road, locality, lead"
               autocomplete="off"
             />
           </div>
@@ -64,9 +60,9 @@
               <label for="status-filter">Filter</label>
               <select id="status-filter">
                 <option value="all">All plots</option>
-                <option value="actionable">Actionable leads</option>
-                <option value="open">Still open</option>
-                <option value="no_local_lead">No local lead</option>
+                <option value="actionable">Leads only</option>
+                <option value="open">Open only</option>
+                <option value="no_local_lead">No lead</option>
               </select>
             </div>
 
@@ -74,7 +70,7 @@
               <label for="sort-mode">Sort</label>
               <select id="sort-mode">
                 <option value="status">By status</option>
-                <option value="parcel">By parcel ID</option>
+                <option value="parcel">By parcel</option>
                 <option value="area">By area</option>
               </select>
             </div>
@@ -83,28 +79,21 @@
 
         <section class="parcel-browser">
           <div class="section-title">
-            <h2>Plots in view</h2>
-            <span class="pill" id="visible-count"></span>
+            <h2>Queue</h2>
+            <span class="count-pill" id="visible-count"></span>
           </div>
           <div class="parcel-list" id="parcel-list"></div>
         </section>
 
         <section class="session-panel">
-          <div class="section-title">
-            <h2>Session</h2>
-            <span class="pill" id="session-state">Loading</span>
-          </div>
-          <p id="session-description" class="session-panel__note">
-            Shared notes from this AOI load for everyone. Open the same link on another device to
-            continue the same review.
-          </p>
-          <strong id="save-state" class="session-panel__status">No saved notes yet</strong>
+          <strong id="save-state" class="session-panel__status">Loading shared notes...</strong>
+          <p id="session-description" class="session-panel__note"></p>
           <div class="export-actions session-panel__actions">
             <button type="button" id="copy-session-link">Copy link</button>
-            <button type="button" class="ghost-button" id="new-session">New session</button>
-            <button type="button" id="export-json">Export JSON</button>
             <button type="button" id="export-csv">Export CSV</button>
-            <button type="button" class="danger-button" id="clear-feedback">Reset local cache</button>
+            <button type="button" id="export-json">JSON</button>
+            <button type="button" class="ghost-button" id="new-session">Fork</button>
+            <button type="button" class="danger-button" id="clear-feedback">Reset local</button>
           </div>
         </section>
       </aside>
@@ -113,70 +102,56 @@
         <div id="viewDiv"></div>
       </main>
 
-      <section class="editor-panel">
-        <div class="editor-panel__inner">
-          <div class="section-title editor-panel__title">
-            <div>
-              <p class="eyebrow">Live review</p>
-              <h2 id="parcel-title">Select a plot</h2>
-            </div>
-            <span class="pill" id="parcel-position"></span>
+      <aside class="review-panel" aria-label="Selected parcel review">
+        <header class="review-header">
+          <div>
+            <p class="eyebrow">Selected Plot</p>
+            <h2 id="parcel-title">Select a plot</h2>
           </div>
+          <span class="count-pill" id="parcel-position"></span>
+        </header>
 
-          <div class="parcel-summary editor-panel__summary" id="parcel-summary"></div>
+        <div class="parcel-summary" id="parcel-summary"></div>
 
-          <div class="editor-panel__column editor-panel__column--main">
-            <div class="field-group">
-              <span class="field-label">What does the local contact know?</span>
-              <div class="choice-row" id="knowledge-status">
-                <button type="button" data-status="possible_lead">Possible lead</button>
-                <button type="button" data-status="definite_lead">Definite lead</button>
-                <button type="button" data-status="no_local_lead">No lead</button>
-              </div>
-            </div>
-
-            <div class="lead-grid">
-              <div class="field-group">
-                <label for="lead-name">Lead name</label>
-                <input
-                  id="lead-name"
-                  type="text"
-                  placeholder="Person, family name, business, or landmark clue"
-                />
-              </div>
-
-              <div class="field-group">
-                <label for="contact-trail">Contact details</label>
-                <input
-                  id="contact-trail"
-                  type="text"
-                  placeholder="Neighbour, café owner, WhatsApp, old owner, local broker..."
-                />
-              </div>
+        <section class="review-form">
+          <div class="field-group">
+            <span class="field-label">Lead status</span>
+            <div class="choice-row" id="knowledge-status">
+              <button type="button" data-status="possible_lead">Possible</button>
+              <button type="button" data-status="definite_lead">Definite</button>
+              <button type="button" data-status="no_local_lead">No lead</button>
             </div>
           </div>
 
-          <div class="editor-panel__column editor-panel__column--side">
-            <div class="field-group editor-panel__notes">
-              <label for="parcel-notes">Notes</label>
-              <textarea
-                id="parcel-notes"
-                rows="4"
-                placeholder="Anything useful: local nickname, family link, gatekeeper, access notes..."
-              ></textarea>
-            </div>
-
-            <div class="action-row editor-panel__actions">
-              <button type="button" class="ghost-button" id="previous-parcel">Previous</button>
-              <button type="button" class="primary-button" id="next-parcel">Save and next</button>
-            </div>
+          <div class="field-group">
+            <label for="lead-name">Lead name</label>
+            <input id="lead-name" type="text" placeholder="Name, family, business, clue" />
           </div>
-        </div>
-      </section>
+
+          <div class="field-group">
+            <label for="contact-trail">Contact details</label>
+            <input id="contact-trail" type="text" placeholder="Phone, neighbour, WhatsApp, broker" />
+          </div>
+
+          <div class="field-group review-notes">
+            <label for="parcel-notes">Notes</label>
+            <textarea
+              id="parcel-notes"
+              rows="7"
+              placeholder="Local context, access notes, family link, owner clue..."
+            ></textarea>
+          </div>
+        </section>
+
+        <footer class="review-actions">
+          <button type="button" class="ghost-button" id="previous-parcel">Previous</button>
+          <button type="button" class="primary-button" id="next-parcel">Save and next</button>
+        </footer>
+      </aside>
     </div>
 
     <script src="./vendor/maplibre-gl.js"></script>
     <script src="./vendor/pmtiles.js"></script>
-    <script type="module" src="./aoi.js?v=2026-05-03-compact-review"></script>
+    <script type="module" src="./aoi.js?v=2026-05-04-v2"></script>
   </body>
 </html>
