@@ -1,0 +1,50 @@
+{
+  "name": "Maças AOI",
+  "generatedAt": "2026-05-08T20:07:52Z",
+  "format": "sintra-aoi-pack-v1",
+  "basemap": {
+    "type": "pmtiles",
+    "file": "./basemap.pmtiles",
+    "buildKey": "20260508.pmtiles",
+    "version": "4.14.7",
+    "maxzoom": 15
+  },
+  "style": {
+    "file": "./style.json",
+    "glyphs": "./assets/fonts/{fontstack}/{range}.pbf",
+    "sprite": "./assets/sprites/v4/light",
+    "styleVersion": "5.7.2"
+  },
+  "styles": {
+    "street": {
+      "file": "./style.json",
+      "label": "Street"
+    },
+    "satellite": {
+      "file": "./satellite-style.json",
+      "label": "Satellite",
+      "tileTemplate": "./satellite/{z}/{x}/{y}.jpg",
+      "minzoom": 0,
+      "maxzoom": 18
+    }
+  },
+  "data": {
+    "aoi": "./aoi.geojson",
+    "parcels": "./parcels.geojson"
+  },
+  "view": {
+    "bbox": [
+      -9.4726777,
+      38.8172279,
+      -9.4548471,
+      38.8376106
+    ],
+    "center": [
+      -9.4637624,
+      38.8274192
+    ],
+    "zoom": 14
+  },
+  "parcelCount": 68,
+  "attribution": "OpenStreetMap contributors via Protomaps basemap extract."
+}
