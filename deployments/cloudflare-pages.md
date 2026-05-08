@@ -26,7 +26,8 @@ The legacy `/app/` path should remain a compatibility redirect only and must not
 
 ## Environment And Bindings
 
-- Required for shared AOI notes API: D1 binding named `AOI_DB`
+- Required for shared AOI notes API: Durable Object namespace binding named `AOI_NOTES`
+- Optional D1 backend: D1 binding named `AOI_DB`; if present, the API uses D1 before falling back to `AOI_NOTES`
 - Required for static assets: Worker Assets binding named `ASSETS`
 - Local Cloudflare helper variables live in `.env.cloudflare.local`
 - Do not commit secrets or dashboard-only IDs into tracked files unless explicitly intended
@@ -38,12 +39,12 @@ python3 scripts/build_deploy_bundle.py
 npx wrangler deploy --dry-run
 ```
 
-The dry run must list both:
+The dry run must list:
 
 - `env.ASSETS`
-- `env.AOI_DB`
+- `env.AOI_NOTES`
 
-If `AOI_DB` is missing, the app will render but shared parcel notes will fall back to local browser storage.
+If neither `AOI_NOTES` nor `AOI_DB` is available, the app will render but shared parcel notes will fall back to local browser storage.
 
 ## Safe DNS Edits
 

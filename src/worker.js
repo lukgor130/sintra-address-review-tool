@@ -1,5 +1,7 @@
 import { onRequest as handleAoiRequest } from "../functions/api/aoi.js";
 
+export { AoiNotesDurableObject } from "../functions/api/aoi.js";
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);

@@ -10,6 +10,22 @@
     "directory": "deploy-root",
     "binding": "ASSETS"
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "AOI_NOTES",
+        "class_name": "AoiNotesDurableObject"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-aoi-notes",
+      "new_sqlite_classes": [
+        "AoiNotesDurableObject"
+      ]
+    }
+  ],
   "routes": [
     {
       "pattern": "maps.verrio.co/*",

@@ -51,6 +51,26 @@ function dbFromEnv(env) {
   return env.AOI_DB || env.DB || env.D1_DB || null;
 }
 
+function durableFromEnv(env) {
+  return env.AOI_NOTES || null;
+}
+
+function durableObjectId(namespace, packId) {
+  return namespace.idFromName(`aoi-notes:${packId}`);
+}
+
+function feedbackStorageKey(sessionId, parcelId) {
+  return `feedback:${sessionId}:${parcelId}`;
+}
+
+function sessionStorageKey(sessionId) {
+  return `session:${sessionId}`;
+}
+
+function defaultSessionStorageKey(packId) {
+  return `default-session:${packId}`;
+}
+
 async function ensureSchema(db) {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS sessions (
@@ -287,18 +307,223 @@ async function cloneFeedbackRows(db, sourceSessionId, targetSessionId) {
   return loadFeedback(db, targetSessionId);
 }
 
+export class AoiNotesDurableObject {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
+
+  async ensureDefaultSession(packId, title) {
+    const defaultKey = defaultSessionStorageKey(packId);
+    const existingId = await this.state.storage.get(defaultKey);
+    if (existingId) {
+      const existing = await this.getSessionById(existingId);
+      if (existing) {
+        return existing;
+      }
+    }
+
+    const session = {
+      id: randomId(),
+      pack_id: packId,
+      slug: DEFAULT_SESSION_SLUG,
+      title: `${title} shared notes`,
+      is_default: 1,
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    };
+    await this.state.storage.put(sessionStorageKey(session.id), session);
+    await this.state.storage.put(defaultKey, session.id);
+    return session;
+  }
+
+  async ensureSessionById(packId, sessionId, title) {
+    const existing = await this.getSessionById(sessionId);
+    if (existing) {
+      if (existing.pack_id !== packId) {
+        throw new Error("session-pack-mismatch");
+      }
+      return existing;
+    }
+
+    const now = nowIso();
+    const session = {
+      id: sessionId,
+      pack_id: packId,
+      slug: sessionId,
+      title: title || "AOI session",
+      is_default: 0,
+      created_at: now,
+      updated_at: now,
+    };
+    await this.state.storage.put(sessionStorageKey(session.id), session);
+    return session;
+  }
+
+  async getSessionById(sessionId) {
+    return this.state.storage.get(sessionStorageKey(sessionId));
+  }
+
+  async loadFeedback(sessionId) {
+    const rows = await this.state.storage.list({ prefix: `feedback:${sessionId}:` });
+    const parcels = {};
+    for (const [key, value] of rows) {
+      const parcelId = key.split(":").pop();
+      parcels[String(parcelId)] = {
+        ...value,
+        updatedAt: value?.updatedAt ?? null,
+      };
+    }
+    return parcels;
+  }
+
+  async upsertFeedbackRows(session, rows) {
+    if (!rows.length) {
+      return {
+        syncedAt: nowIso(),
+        parcels: await this.loadFeedback(session.id),
+      };
+    }
+
+    const syncedAt = nowIso();
+    for (const row of rows) {
+      const parcelId = Number(row.parcelId);
+      if (!Number.isFinite(parcelId)) {
+        continue;
+      }
+      const feedback = {
+        ...normalizeFeedback(row.feedback, parcelId),
+        updatedAt: syncedAt,
+      };
+      await this.state.storage.put(feedbackStorageKey(session.id, parcelId), feedback);
+    }
+
+    const updatedSession = {
+      ...session,
+      updated_at: syncedAt,
+    };
+    await this.state.storage.put(sessionStorageKey(session.id), updatedSession);
+    if (updatedSession.is_default) {
+      await this.state.storage.put(defaultSessionStorageKey(updatedSession.pack_id), updatedSession.id);
+    }
+
+    return {
+      syncedAt,
+      parcels: await this.loadFeedback(session.id),
+    };
+  }
+
+  async cloneFeedbackRows(sourceSessionId, targetSessionId) {
+    const rows = await this.state.storage.list({ prefix: `feedback:${sourceSessionId}:` });
+    const now = nowIso();
+    for (const [key, value] of rows) {
+      const parcelId = key.split(":").pop();
+      await this.state.storage.put(feedbackStorageKey(targetSessionId, parcelId), {
+        ...value,
+        updatedAt: now,
+      });
+    }
+    return this.loadFeedback(targetSessionId);
+  }
+
+  async fetch(request) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204 });
+    }
+
+    const url = new URL(request.url);
+    const action = url.searchParams.get("action") || "bootstrap";
+    const rawPackId = url.searchParams.get("packId");
+
+    if (!rawPackId) {
+      return text("Missing packId.", 400);
+    }
+
+    const packId = slugify(rawPackId);
+    const title = url.searchParams.get("title") || "AOI";
+
+    try {
+      if (action === "health" && request.method === "GET") {
+        return json({ ok: true, storage: "durable-object", checkedAt: nowIso() });
+      }
+
+      if (action === "bootstrap" && request.method === "POST") {
+        const body = await parseBody(request);
+        const requestedSessionId = String(body.sessionId || "").trim();
+        const session = requestedSessionId
+          ? await this.ensureSessionById(packId, requestedSessionId, title)
+          : await this.ensureDefaultSession(packId, title);
+        const feedback = await this.loadFeedback(session.id);
+        return json({ ok: true, session: serializeSession(session), feedback });
+      }
+
+      if (action === "create-session" && request.method === "POST") {
+        const body = await parseBody(request);
+        const cloneFromSessionId = String(body.cloneFromSessionId || "").trim();
+        const sessionId = randomId();
+        const now = nowIso();
+        const session = {
+          id: sessionId,
+          pack_id: packId,
+          slug: sessionId,
+          title: String(body.title || `${title} session`).trim(),
+          is_default: 0,
+          created_at: now,
+          updated_at: now,
+        };
+        await this.state.storage.put(sessionStorageKey(session.id), session);
+
+        let feedback = {};
+        if (cloneFromSessionId) {
+          const sourceSession = await this.getSessionById(cloneFromSessionId);
+          if (sourceSession && sourceSession.pack_id === packId) {
+            feedback = await this.cloneFeedbackRows(cloneFromSessionId, sessionId);
+          }
+        }
+
+        return json({ ok: true, session: serializeSession(session), feedback });
+      }
+
+      if (action === "upsert" && request.method === "POST") {
+        const body = await parseBody(request);
+        const sessionId = String(body.sessionId || "").trim();
+        const rows = Array.isArray(body.rows) ? body.rows.slice(0, MAX_ROWS_PER_WRITE) : [];
+        if (!sessionId) {
+          return text("Missing sessionId.", 400);
+        }
+
+        const session = await this.getSessionById(sessionId);
+        if (!session) {
+          return text("Unknown session.", 404);
+        }
+        if (session.pack_id !== packId) {
+          return text("Session does not belong to this AOI pack.", 409);
+        }
+
+        const result = await this.upsertFeedbackRows(session, rows);
+        return json({
+          ok: true,
+          session: serializeSession(await this.getSessionById(sessionId)),
+          feedback: result,
+        });
+      }
+
+      return text("Unsupported action.", 404);
+    } catch (error) {
+      if (error?.message === "session-pack-mismatch") {
+        return text("Session does not belong to this AOI pack.", 409);
+      }
+      console.error("AOI durable API error", error);
+      return text("Failed to process AOI request.", 500);
+    }
+  }
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204 });
   }
-
-  const db = dbFromEnv(env);
-  if (!db) {
-    return text("Missing AOI database binding.", 500);
-  }
-
-  await ensureSchema(db);
 
   const url = new URL(request.url);
   const action = url.searchParams.get("action") || "bootstrap";
@@ -309,6 +534,18 @@ export async function onRequest(context) {
   }
   const packId = slugify(rawPackId);
   const title = url.searchParams.get("title") || "AOI";
+
+  const db = dbFromEnv(env);
+  if (!db) {
+    const durableNamespace = durableFromEnv(env);
+    if (durableNamespace) {
+      const durableId = durableObjectId(durableNamespace, packId);
+      return durableNamespace.get(durableId).fetch(request);
+    }
+    return text("Missing AOI cloud storage binding.", 500);
+  }
+
+  await ensureSchema(db);
 
   try {
     if (action === "health" && request.method === "GET") {
