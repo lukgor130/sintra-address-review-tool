@@ -129,6 +129,7 @@ def main() -> None:
 
     build_addressreview()
     copy_tree("azenhas")
+    copy_tree("banzao22")
     copy_tree("sintratotal")
     copy_tree("app")
 

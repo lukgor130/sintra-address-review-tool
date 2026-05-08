@@ -11,6 +11,7 @@
 - `https://maps.verrio.co/`
 - `https://maps.verrio.co/addressreview/`
 - `https://maps.verrio.co/azenhas/`
+- `https://maps.verrio.co/banzao22/`
 - `https://maps.verrio.co/sintratotal/`
 
 The root path `/` is intentionally blank and should not be turned into a public landing page.

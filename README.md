@@ -13,6 +13,7 @@ It must stay separate from the main `verrio.co` website.
 - Prefer Option A routing:
   - `https://maps.verrio.co/addressreview/`
   - `https://maps.verrio.co/azenhas/`
+  - `https://maps.verrio.co/banzao22/`
   - `https://maps.verrio.co/sintratotal/`
 - `https://maps.verrio.co/` itself should stay blank and reveal no public information
 
@@ -26,6 +27,9 @@ It must stay separate from the main `verrio.co` website.
   - source cache and AOI pack data
 - `azenhas/`
   - local knowledge AOI app
+  - self-contained data pack and vendor assets
+- `banzao22/`
+  - local knowledge AOI app for the Banzao 22 polygon
   - self-contained data pack and vendor assets
 - `sintratotal/`
   - cached source explorer
@@ -62,6 +66,7 @@ The repository is being normalized toward this structure:
 /apps
   /addressreview
   /azenhas
+  /banzao22
   /sintratotal
 
 /packages
@@ -103,6 +108,7 @@ Useful local URLs:
 - `http://127.0.0.1:8011/addressreview/`
 - `http://127.0.0.1:8011/addressreview/aoi.html`
 - `http://127.0.0.1:8011/azenhas/`
+- `http://127.0.0.1:8011/banzao22/`
 - `http://127.0.0.1:8011/sintratotal/`
 
 Use `scripts/serve_app.py` instead of `python -m http.server` because PMTiles support needs HTTP byte-range handling.
@@ -126,6 +132,7 @@ This writes the deployable site to `deploy-root/`, including:
 - blank root `/`
 - `addressreview/`
 - `azenhas/`
+- `banzao22/`
 - `sintratotal/`
 - legacy `/app/` redirect shims
 - Cloudflare Pages function bundle files for `/api/aoi`
