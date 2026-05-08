@@ -156,6 +156,17 @@ function serializeFeedbackRow(row) {
   }
 }
 
+function feedbackIsEmpty(feedback) {
+  return (
+    normalizeStatus(feedback?.knowledgeStatus) === "unknown" &&
+    !String(feedback?.leadName ?? "").trim() &&
+    !String(feedback?.contactTrail ?? "").trim() &&
+    !String(feedback?.confidence ?? "").trim() &&
+    !String(feedback?.notes ?? "").trim() &&
+    !feedback?.reviewedAt
+  );
+}
+
 async function getSessionBySlug(db, packId, slug) {
   return db
     .prepare(
@@ -254,6 +265,14 @@ async function upsertFeedbackRows(db, session, rows) {
   const statements = rows.map((row) => {
     const parcelId = Number(row.parcelId);
     const feedback = normalizeFeedback(row.feedback, parcelId);
+    if (feedbackIsEmpty(feedback)) {
+      return db
+        .prepare(
+          `DELETE FROM parcel_feedback
+           WHERE session_id = ?1 AND parcel_id = ?2`,
+        )
+        .bind(session.id, parcelId);
+    }
     return db
       .prepare(
         `INSERT INTO parcel_feedback (session_id, parcel_id, data, created_at, updated_at)
@@ -395,7 +414,11 @@ export class AoiNotesDurableObject {
         ...normalizeFeedback(row.feedback, parcelId),
         updatedAt: syncedAt,
       };
-      await this.state.storage.put(feedbackStorageKey(session.id, parcelId), feedback);
+      if (feedbackIsEmpty(feedback)) {
+        await this.state.storage.delete(feedbackStorageKey(session.id, parcelId));
+      } else {
+        await this.state.storage.put(feedbackStorageKey(session.id, parcelId), feedback);
+      }
     }
 
     const updatedSession = {
