@@ -1,11 +1,11 @@
 {
   "name": "Banzao 22",
-  "generatedAt": "2026-05-08T15:50:53Z",
+  "generatedAt": "2026-05-19T21:34:00Z",
   "format": "sintra-aoi-pack-v1",
   "basemap": {
     "type": "pmtiles",
     "file": "./basemap.pmtiles",
-    "buildKey": "20260508.pmtiles",
+    "buildKey": "20260519.pmtiles",
     "version": "4.14.7",
     "maxzoom": 15
   },
@@ -34,17 +34,17 @@
   },
   "view": {
     "bbox": [
-      -9.4554948,
-      38.804935,
-      -9.4387432,
-      38.8152626
+      -9.4807145,
+      38.7955959,
+      -9.42809,
+      38.8267798
     ],
     "center": [
-      -9.447119,
-      38.8100988
+      -9.4544022,
+      38.8111878
     ],
     "zoom": 14
   },
-  "parcelCount": 35,
+  "parcelCount": 185,
   "attribution": "OpenStreetMap contributors via Protomaps basemap extract."
 }
