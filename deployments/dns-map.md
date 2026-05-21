@@ -10,10 +10,13 @@ Preferred publishing model: Worker route on `maps.verrio.co/*`, with route-based
 | Banzao 22 | `/banzao22` | `https://maps.verrio.co/banzao22/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active route | Local-knowledge AOI app generated from the GeoJSON polygon updated on 2026-05-19; 121-parcel pack with local street and satellite assets. |
 | Maças AOI | `/max` | `https://maps.verrio.co/max/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active route | Local-knowledge AOI app generated from `/Users/lukeg/Downloads/Export-2`; 68-parcel pack with local street and satellite assets. |
 | Sintra Total | `/sintratotal` | `https://maps.verrio.co/sintratotal/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active legacy route | Depends on shared explorer assets under `/addressreview`. |
+| Gaia Total | `/apps/gaiatotal` | `https://maps.verrio.co/gaiatotal/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | `maps.verrio.co/*` via Worker route | Active route | Vila Nova de Gaia PDM parcel explorer; build script publishes canonical app folder as `/gaiatotal/`. |
+| TerraVia | `/apps/terravia` | `https://terravia.verrio.co/` | `verrio-maps-workspace` | `main` | `python3 scripts/build_deploy_bundle.py` | `deploy-root` | Proxied CNAME `terravia.verrio.co` -> `maps.verrio.co`; Worker route `terravia.verrio.co/*` | Active route | Dedicated TerraVia landing page subdomain explicitly requested on 2026-05-21; root `verrio.co` and `www.verrio.co` remain untouched. Also bundled at `/terravia/` for route-based workspace consistency. |
 
 # Notes
 
 - Safe DNS scope for this repo is limited to `maps.verrio.co` and documented child routes or child subdomains beneath it.
+- Exception recorded on 2026-05-21: `terravia.verrio.co` is served by this Worker route because the user explicitly requested that public URL for the TerraVia landing page. This does not authorize changes to `verrio.co`, `www.verrio.co`, or the main website repository.
 - Do not edit `verrio.co`, `www.verrio.co`, or apex website records from this repository workflow.
 - Legacy compatibility route: `/app/` redirects to `/addressreview/` and should not be published, linked, or documented as a primary app URL.
 - Publish from `deploy-root/` so oversized local cache files are not shipped to Cloudflare.

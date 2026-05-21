@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-05-04T22:25:00+01:00",
+  "target": "Vila Nova de Gaia",
+  "publicUrl": "https://maps.verrio.co/gaiatotal/",
+  "datasets": {
+    "soilRegime": {
+      "title": "CRUS Portugal Continental · Vila Nova de Gaia",
+      "source": "https://ogcapi.dgterritorio.gov.pt/collections/crus",
+      "tileTemplate": "./data/crus-regime.pmtiles",
+      "featureCount": 3520,
+      "counts": {
+        "Solo Urbano": 2212,
+        "Solo Rústico": 707,
+        "Solo Urbano (urbanizável – transitório)": 601
+      },
+      "note": "Official DGT soil-regime layer used for urban/rustic designation because DGT Cadastro Predial exposes no Gaia parcel records through the public OGC API as of this cache build.",
+      "storage": "PMTiles vector archive"
+    },
+    "cadastroPredial": {
+      "title": "DGT Cadastro Predial (Continente)",
+      "source": "https://ogcapi.dgterritorio.gov.pt/collections/cadastro",
+      "gaiaFeatureCount": 0,
+      "bboxFeatureCount": 2807,
+      "note": "The Gaia municipal bounding box was checked and centroid-clipped against CAOP2025 Vila Nova de Gaia; no Cadastro Predial parcels fell inside the municipality. Local GeoJSON upload remains available for private parcel packs."
+    }
+  }
+}

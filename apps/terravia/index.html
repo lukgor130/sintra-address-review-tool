@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="TerraVia provides planning intelligence and design strategy for landowners in Portugal.">
+<title>TerraVia Land Intelligence & Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --forest: #1C2E1E;
+    --forest-mid: #2D4A30;
+    --forest-light: #3D6640;
+    --sage: #7A9E7E;
+    --sage-light: #B2C9B4;
+    --limestone: #F2EDE4;
+    --plaster: #FAF8F4;
+    --charcoal: #2A2A28;
+    --warm-mid: #6B6558;
+    --warm-light: #9A9286;
+    --survey-red: #8B2E2E;
+    --azulejo: #2C5282;
+    --terracotta: #C4673A;
+    --cream: #E8E0D0;
+    --ink: #1A1A18;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--plaster);
+    color: var(--charcoal);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  a, button, input, select, textarea { font: inherit; }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--terracotta);
+    outline-offset: 4px;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 200;
+    background: var(--plaster);
+    color: var(--forest);
+    padding: 0.75rem 1rem;
+    transform: translateY(-140%);
+    transition: transform 0.2s;
+  }
+  .skip-link:focus { transform: translateY(0); }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.5rem 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    mix-blend-mode: normal;
+    transition: background 0.4s ease, padding 0.4s ease;
+  }
+  nav.scrolled {
+    background: rgba(250, 248, 244, 0.96);
+    backdrop-filter: blur(8px);
+    padding: 1rem 4rem;
+    border-bottom: 1px solid var(--cream);
+  }
+  .nav-logo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nav-logo-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--limestone);
+    line-height: 1;
+  }
+  .nav-logo-sub {
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--sage-light);
+    font-weight: 300;
+  }
+  nav.scrolled .nav-logo-mark { color: var(--forest); }
+  nav.scrolled .nav-logo-sub { color: var(--warm-mid); }
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+    align-items: center;
+  }
+  .nav-links a {
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--warm-mid);
+    font-weight: 400;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--forest); }
+  .nav-cta {
+    font-size: 0.75rem !important;
+    letter-spacing: 0.14em !important;
+    color: var(--forest) !important;
+    border: 1px solid var(--forest) !important;
+    padding: 0.55rem 1.4rem;
+    transition: background 0.2s, color 0.2s !important;
+  }
+  .nav-cta:hover {
+    background: var(--forest) !important;
+    color: var(--plaster) !important;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .hero-left {
+    background: var(--forest);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 8rem 5rem 6rem 5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Topo lines SVG background */
+  .hero-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='600' height='800' viewBox='0 0 600 800' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cellipse cx='300' cy='600' rx='500' ry='180' stroke='%233D6640' stroke-width='0.8' fill='none' opacity='0.5'/%3E%3Cellipse cx='300' cy='600' rx='420' ry='150' stroke='%233D6640' stroke-width='0.8' fill='none' opacity='0.5'/%3E%3Cellipse cx='300' cy='600' rx='340' ry='120' stroke='%233D6640' stroke-width='0.8' fill='none' opacity='0.5'/%3E%3Cellipse cx='300' cy='600' rx='260' ry='90' stroke='%233D6640' stroke-width='0.8' fill='none' opacity='0.5'/%3E%3Cellipse cx='300' cy='600' rx='180' ry='60' stroke='%233D6640' stroke-width='0.8' fill='none' opacity='0.5'/%3E%3Cellipse cx='300' cy='600' rx='100' ry='30' stroke='%233D6640' stroke-width='0.8' fill='none' opacity='0.5'/%3E%3Cellipse cx='180' cy='300' rx='300' ry='120' stroke='%232D4A30' stroke-width='0.6' fill='none' opacity='0.4'/%3E%3Cellipse cx='180' cy='300' rx='240' ry='95' stroke='%232D4A30' stroke-width='0.6' fill='none' opacity='0.4'/%3E%3Cellipse cx='180' cy='300' rx='180' ry='70' stroke='%232D4A30' stroke-width='0.6' fill='none' opacity='0.4'/%3E%3Cellipse cx='180' cy='300' rx='120' ry='45' stroke='%232D4A30' stroke-width='0.6' fill='none' opacity='0.4'/%3E%3Cellipse cx='450' cy='150' rx='200' ry='80' stroke='%232D4A30' stroke-width='0.5' fill='none' opacity='0.3'/%3E%3Cellipse cx='450' cy='150' rx='140' ry='55' stroke='%232D4A30' stroke-width='0.5' fill='none' opacity='0.3'/%3E%3Cellipse cx='450' cy='150' rx='80' ry='30' stroke='%232D4A30' stroke-width='0.5' fill='none' opacity='0.3'/%3E%3C/svg%3E");
+    background-size: cover;
+    opacity: 0.8;
+  }
+
+  .hero-left-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--sage);
+  }
+
+  .hero-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 4.5vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--limestone);
+    margin-bottom: 2.5rem;
+    letter-spacing: -0.01em;
+  }
+  .hero-headline em {
+    font-style: italic;
+    color: var(--sage-light);
+  }
+
+  .hero-body {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--sage-light);
+    max-width: 380px;
+    margin-bottom: 3rem;
+    font-weight: 300;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--terracotta);
+    color: var(--plaster);
+    text-decoration: none;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.9rem 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-primary:hover { background: #B35A30; }
+
+  .btn-ghost {
+    color: var(--sage-light);
+    text-decoration: none;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.2s;
+  }
+  .btn-ghost:hover { color: var(--limestone); }
+  .btn-ghost::after {
+    content: '→';
+    transition: transform 0.2s;
+  }
+  .btn-ghost:hover::after { transform: translateX(4px); }
+
+  /* Hero right */
+  .hero-right {
+    background: var(--limestone);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  /* Architectural grid overlay */
+  .hero-right-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(44, 46, 30, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(44, 46, 30, 0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Survey red cross marker */
+  .survey-marker {
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    width: 20px;
+    height: 20px;
+  }
+  .survey-marker::before,
+  .survey-marker::after {
+    content: '';
+    position: absolute;
+    background: var(--survey-red);
+  }
+  .survey-marker::before {
+    width: 1px;
+    height: 20px;
+    left: 50%;
+    top: 0;
+  }
+  .survey-marker::after {
+    width: 20px;
+    height: 1px;
+    top: 50%;
+    left: 0;
+  }
+
+  /* Parcel diagram */
+  .parcel-diagram {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .parcel-diagram svg {
+    width: min(70vw, 380px);
+    height: auto;
+  }
+
+  .hero-right-info {
+    position: relative;
+    z-index: 2;
+    padding: 3rem;
+    width: 100%;
+    border-top: 1px solid var(--cream);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .hero-stat-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--warm-mid);
+    margin-bottom: 0.4rem;
+  }
+  .hero-stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: var(--forest);
+    line-height: 1;
+  }
+  .hero-stat-unit {
+    font-size: 0.75rem;
+    color: var(--warm-light);
+    margin-top: 0.3rem;
+    font-weight: 300;
+  }
+
+  /* SECTION SHARED */
+  section { padding: 8rem 4rem; }
+
+  .section-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--warm-mid);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--warm-mid);
+  }
+
+  /* PROPOSITION */
+  .proposition {
+    background: var(--plaster);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8rem;
+    align-items: start;
+  }
+
+  .proposition-left h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 2rem;
+  }
+
+  .proposition-left h2 em {
+    font-style: italic;
+    color: var(--forest);
+  }
+
+  .proposition-left p {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--warm-mid);
+    margin-bottom: 1.25rem;
+    font-weight: 300;
+  }
+
+  .proposition-right {
+    padding-top: 1rem;
+  }
+
+  .value-gap-box {
+    border: 1px solid var(--cream);
+    padding: 2.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .value-gap-box::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--forest);
+  }
+
+  .value-gap-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 1rem;
+  }
+
+  .value-gap-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--charcoal);
+    line-height: 1.5;
+  }
+
+  .prop-footnote {
+    font-size: 0.8rem;
+    color: var(--warm-light);
+    line-height: 1.6;
+    font-weight: 300;
+    padding-left: 1rem;
+    border-left: 1px solid var(--cream);
+  }
+
+  /* ROUTES */
+  .routes {
+    background: var(--forest);
+    padding: 8rem 4rem;
+  }
+
+  .routes-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+    margin-bottom: 5rem;
+    align-items: end;
+  }
+
+  .routes-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3vw, 3rem);
+    font-weight: 300;
+    color: var(--limestone);
+    line-height: 1.15;
+  }
+
+  .routes-header p {
+    font-size: 0.95rem;
+    color: var(--sage-light);
+    line-height: 1.75;
+    font-weight: 300;
+    max-width: 520px;
+    align-self: end;
+  }
+
+  .routes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5px;
+    background: var(--forest-mid);
+  }
+
+  .route-card {
+    background: var(--forest);
+    padding: 2.5rem;
+    transition: background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .route-card:hover { background: var(--forest-mid); }
+
+  .route-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: var(--forest-mid);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    transition: color 0.3s;
+  }
+
+  .route-card:hover .route-number { color: var(--forest-light); }
+
+  .route-name {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 0.75rem;
+  }
+
+  .route-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--limestone);
+    margin-bottom: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .route-desc {
+    font-size: 0.85rem;
+    color: var(--sage-light);
+    line-height: 1.7;
+    font-weight: 300;
+    margin-bottom: 1.75rem;
+  }
+
+  .route-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .route-tag {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--forest-light);
+    color: var(--sage);
+  }
+
+  /* PROCESS */
+  .process {
+    background: var(--plaster);
+    padding: 8rem 4rem;
+  }
+
+  .process-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-bottom: 6rem;
+  }
+
+  .process-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3vw, 3rem);
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1.15;
+  }
+
+  .process-header p {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: var(--warm-mid);
+    font-weight: 300;
+    align-self: end;
+  }
+
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .process-steps::before {
+    content: '';
+    position: absolute;
+    top: 2.2rem;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--cream);
+  }
+
+  .process-step {
+    padding: 0 1.5rem 2rem 0;
+    position: relative;
+  }
+
+  .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 2px solid var(--cream);
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .process-step.active .step-dot,
+  .process-step:hover .step-dot {
+    background: var(--forest);
+    border-color: var(--forest);
+  }
+
+  .step-num {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--warm-light);
+    margin-bottom: 0.5rem;
+  }
+
+  .step-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--charcoal);
+    margin-bottom: 0.75rem;
+  }
+
+  .step-desc {
+    font-size: 0.8rem;
+    color: var(--warm-mid);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* CASE STUDY TEASER */
+  .case-study {
+    background: var(--limestone);
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 70vh;
+  }
+
+  .case-left {
+    background: var(--charcoal);
+    padding: 6rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Annotated map placeholder */
+  .case-map {
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    background-image: url("data:image/svg+xml,%3Csvg width='500' height='600' viewBox='0 0 500 600' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 400 Q150 200 250 300 Q350 400 450 250' stroke='%23B2C9B4' stroke-width='1' fill='none'/%3E%3Cpath d='M50 430 Q150 230 250 330 Q350 430 450 280' stroke='%23B2C9B4' stroke-width='1' fill='none'/%3E%3Cpath d='M50 460 Q150 260 250 360 Q350 460 450 310' stroke='%23B2C9B4' stroke-width='1' fill='none'/%3E%3Cpath d='M50 490 Q150 290 250 390 Q350 490 450 340' stroke='%23B2C9B4' stroke-width='1' fill='none'/%3E%3Cpath d='M100 300 L400 300' stroke='%23B2C9B4' stroke-width='0.5' stroke-dasharray='4 4'/%3E%3Cpath d='M200 100 L200 500' stroke='%23B2C9B4' stroke-width='0.5' stroke-dasharray='4 4'/%3E%3Crect x='180' y='220' width='120' height='80' stroke='%238B2E2E' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='240' cy='260' r='4' fill='%238B2E2E'/%3E%3C/svg%3E");
+    background-size: cover;
+  }
+
+  .case-left-content { position: relative; z-index: 2; }
+
+  .case-tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--survey-red);
+    border: 1px solid var(--survey-red);
+    padding: 0.3rem 0.8rem;
+    margin-bottom: 2rem;
+  }
+
+  .case-left h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
+    font-weight: 300;
+    color: var(--limestone);
+    line-height: 1.15;
+    margin-bottom: 2rem;
+  }
+
+  .case-left h2 em {
+    font-style: italic;
+    color: var(--sage-light);
+  }
+
+  .case-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .case-meta-item {}
+  .case-meta-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--warm-light);
+    margin-bottom: 0.35rem;
+  }
+  .case-meta-value {
+    font-size: 0.9rem;
+    color: var(--sage-light);
+    font-weight: 300;
+  }
+
+  .case-right {
+    padding: 6rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .case-constraint {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--cream);
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .constraint-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 0.45rem;
+  }
+  .constraint-indicator.risk { background: var(--survey-red); }
+  .constraint-indicator.note { background: var(--azulejo); }
+  .constraint-indicator.ok { background: var(--sage); }
+
+  .constraint-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--warm-light);
+    margin-bottom: 0.25rem;
+  }
+  .constraint-text {
+    font-size: 0.9rem;
+    color: var(--charcoal);
+    font-weight: 300;
+  }
+
+  .case-cta {
+    margin-top: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  /* INSIGHTS STRIP */
+  .insights {
+    background: var(--plaster);
+    padding: 7rem 4rem;
+  }
+
+  .insights-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3.5rem;
+  }
+
+  .insights-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .insights-link {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--forest);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .insights-link::after { content: '→'; }
+
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5px;
+    background: var(--cream);
+  }
+
+  .insight-card {
+    background: var(--plaster);
+    padding: 2.5rem;
+    text-decoration: none;
+    display: block;
+    transition: background 0.2s;
+  }
+  .insight-card:hover { background: var(--limestone); }
+
+  .insight-topic {
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 1rem;
+  }
+
+  .insight-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--charcoal);
+    line-height: 1.4;
+    margin-bottom: 1rem;
+  }
+
+  .insight-desc {
+    font-size: 0.82rem;
+    color: var(--warm-mid);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* CONTACT */
+  .contact-band {
+    background: var(--forest);
+    padding: 7rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+
+  .contact-band h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3vw, 3.2rem);
+    font-weight: 300;
+    color: var(--limestone);
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+  }
+
+  .contact-band p {
+    font-size: 0.9rem;
+    color: var(--sage-light);
+    line-height: 1.75;
+    font-weight: 300;
+    margin-bottom: 2.5rem;
+  }
+
+  .contact-form {}
+  .contact-form form { display: block; }
+  .form-row { margin-bottom: 1px; }
+
+  .form-field {
+    width: 100%;
+    background: var(--forest-mid);
+    border: none;
+    border-bottom: 1px solid var(--forest-light);
+    padding: 1rem 1.25rem;
+    color: var(--limestone);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    display: block;
+    min-height: 44px;
+  }
+  .form-field::placeholder { color: var(--sage); opacity: 0.6; }
+  .form-field:focus {
+    border-bottom-color: var(--sage);
+    background: var(--forest-light);
+  }
+
+  select.form-field option { background: var(--forest); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin-bottom: 1px; }
+
+  .form-submit {
+    width: 100%;
+    background: var(--terracotta);
+    color: var(--plaster);
+    border: none;
+    padding: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background 0.2s;
+    min-height: 48px;
+  }
+  .form-submit:hover { background: #B35A30; }
+
+  .form-note {
+    margin-top: 1rem;
+    min-height: 1.25rem;
+    font-size: 0.78rem;
+    color: var(--sage-light);
+    font-weight: 300;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    padding: 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .footer-brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--limestone);
+    margin-bottom: 0.4rem;
+  }
+
+  .footer-brand-sub {
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--warm-light);
+    margin-bottom: 1.25rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.8rem;
+    color: var(--warm-mid);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .footer-col-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--warm-mid);
+    margin-bottom: 1.25rem;
+  }
+
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .footer-links a {
+    text-decoration: none;
+    font-size: 0.82rem;
+    color: var(--warm-light);
+    font-weight: 300;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--limestone); }
+
+  .footer-bottom {
+    background: var(--ink);
+    padding: 1.5rem 4rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-legal {
+    font-size: 0.72rem;
+    color: var(--warm-light);
+    font-weight: 300;
+  }
+
+  /* Scroll animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (max-width: 1100px) {
+    nav, nav.scrolled { padding: 1.1rem 2rem; }
+    .nav-links { gap: 1.25rem; }
+    section, .routes, .process, .insights, .contact-band { padding-inline: 2rem; }
+    .hero-left { padding: 7rem 3rem 4rem; }
+    .proposition { gap: 4rem; }
+    .routes-grid, .insights-grid { grid-template-columns: 1fr; }
+    .process-steps { grid-template-columns: repeat(3, 1fr); row-gap: 2rem; }
+    .process-steps::before { display: none; }
+    footer { grid-template-columns: 1fr 1fr; padding-inline: 2rem; }
+  }
+
+  @media (max-width: 760px) {
+    nav, nav.scrolled {
+      position: static;
+      display: block;
+      padding: 1rem;
+      background: var(--plaster);
+      border-bottom: 1px solid var(--cream);
+    }
+    .nav-logo { margin-bottom: 0.85rem; }
+    .nav-logo-mark { color: var(--forest); }
+    .nav-logo-sub { color: var(--warm-mid); }
+    .nav-logo-sub { max-width: 18rem; }
+    .nav-links {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      overflow: visible;
+      padding-bottom: 0;
+    }
+    .nav-links li { min-width: 0; }
+    .nav-links li:last-child { grid-column: 1 / -1; }
+    .nav-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid var(--cream);
+      background: var(--plaster);
+      letter-spacing: 0.08em;
+      width: 100%;
+    }
+    .nav-cta { padding-inline: 1rem !important; }
+    .hero {
+      min-height: 0;
+      grid-template-columns: 1fr;
+    }
+    .hero-left { padding: 4rem 1.25rem; }
+    .hero-actions { flex-direction: column; align-items: stretch; }
+    .hero-right {
+      min-height: 520px;
+      align-items: flex-end;
+    }
+    .hero-right-info {
+      grid-template-columns: 1fr;
+      padding: 1.25rem;
+    }
+    section, .routes, .process, .insights, .contact-band { padding: 4.5rem 1.25rem; }
+    .proposition,
+    .routes-header,
+    .process-header,
+    .case-study,
+    .contact-band {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+    .value-gap-box { padding: 1.5rem; }
+    .proposition-right > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    .process-steps { grid-template-columns: 1fr; }
+    .process-step { padding-right: 0; }
+    .case-left, .case-right { padding: 4rem 1.25rem; }
+    .case-meta, .form-grid { grid-template-columns: 1fr; }
+    .case-cta { flex-direction: column; align-items: stretch; }
+    .insights-header { display: block; }
+    .insights-link { margin-top: 1rem; min-height: 44px; }
+    footer { grid-template-columns: 1fr; padding: 3rem 1.25rem; }
+    .footer-bottom {
+      padding: 1.25rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .hero-headline { font-size: 2.65rem; }
+    .route-card, .insight-card { padding: 1.5rem; }
+    .section-label, .hero-eyebrow { letter-spacing: 0.18em; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#contact">Skip to contact</a>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-mark">TerraVia</div>
+    <div class="nav-logo-sub">Land Intelligence & Design</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#routes">Services</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#case">Case Study</a></li>
+    <li><a href="#insights">Insights</a></li>
+    <li><a href="#contact" class="nav-cta">Assess my land</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <div class="hero-left-content">
+      <div class="hero-eyebrow">Planning intelligence for landowners in Portugal</div>
+      <h1 class="hero-headline">
+        Every site<br>has a <em>correct</em><br>route forward
+      </h1>
+      <p class="hero-body">
+        We assess the real planning position, identify constraints early, and recommend the most intelligent path — whether that is a planning application, a conditional sale, a legalisation strategy, or something else entirely.
+      </p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn-primary">Assess my land</a>
+        <a href="#process" class="btn-ghost">See the process</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-right-grid"></div>
+    <div class="survey-marker"></div>
+
+    <!-- SVG parcel diagram -->
+    <div class="parcel-diagram">
+      <svg width="380" height="320" viewBox="0 0 380 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer boundary -->
+        <path d="M60 240 L80 80 L200 60 L310 100 L320 200 L260 260 L100 270 Z" stroke="#C4C0B8" stroke-width="1" fill="rgba(200,195,185,0.15)" stroke-dasharray="6 3"/>
+        <!-- Inner parcel A -->
+        <path d="M90 220 L100 110 L200 95 L230 115 L225 200 L160 230 Z" stroke="#1C2E1E" stroke-width="1.5" fill="rgba(28,46,30,0.06)"/>
+        <!-- Inner parcel B -->
+        <path d="M225 200 L230 115 L300 130 L295 190 Z" stroke="#1C2E1E" stroke-width="1" fill="rgba(28,46,30,0.04)" stroke-dasharray="4 2"/>
+        <!-- Survey point -->
+        <circle cx="160" cy="160" r="3" fill="#8B2E2E"/>
+        <line x1="160" y1="148" x2="160" y2="172" stroke="#8B2E2E" stroke-width="1"/>
+        <line x1="148" y1="160" x2="172" y2="160" stroke="#8B2E2E" stroke-width="1"/>
+        <!-- Labels -->
+        <text x="145" y="175" font-family="DM Sans" font-size="9" fill="#6B6558" letter-spacing="1">PARCELA A</text>
+        <text x="248" y="165" font-family="DM Sans" font-size="8" fill="#9A9286" letter-spacing="1">RÚSTICO</text>
+        <!-- Dimension lines -->
+        <line x1="70" y1="280" x2="270" y2="280" stroke="#C4C0B8" stroke-width="0.5"/>
+        <line x1="70" y1="277" x2="70" y2="283" stroke="#C4C0B8" stroke-width="0.5"/>
+        <line x1="270" y1="277" x2="270" y2="283" stroke="#C4C0B8" stroke-width="0.5"/>
+        <text x="155" y="294" font-family="DM Sans" font-size="8" fill="#9A9286" text-anchor="middle">approx. 2.4 ha</text>
+        <!-- North arrow -->
+        <line x1="340" y1="80" x2="340" y2="56" stroke="#C4C0B8" stroke-width="1"/>
+        <polygon points="340,50 336,62 344,62" fill="#C4C0B8"/>
+        <text x="340" y="95" font-family="DM Sans" font-size="8" fill="#9A9286" text-anchor="middle">N</text>
+      </svg>
+    </div>
+
+    <div class="hero-right-info">
+      <div>
+        <div class="hero-stat-label">Focus territory</div>
+        <div class="hero-stat-value">Sintra</div>
+        <div class="hero-stat-unit">& wider Portugal</div>
+      </div>
+      <div>
+        <div class="hero-stat-label">Routes available</div>
+        <div class="hero-stat-value">7+</div>
+        <div class="hero-stat-unit">planning pathways</div>
+      </div>
+      <div>
+        <div class="hero-stat-label">Approach</div>
+        <div class="hero-stat-value">Diagnosis</div>
+        <div class="hero-stat-unit">first, always</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROPOSITION -->
+<section class="proposition reveal" id="proposition">
+  <div class="proposition-left">
+    <div class="section-label">The problem we solve</div>
+    <h2>Land is not undervalued.<br>It is <em>misunderstood.</em></h2>
+    <p>Where planning outcomes are unclear, buyers become nervous, transactions slow down, and negotiating leverage shifts toward experienced buyers willing to absorb risk.</p>
+    <p>Owners struggle to realise full potential value — not because the land is weak, but because the planning position has never been properly assessed and communicated.</p>
+    <p>TerraVia investigates the real conditions, identifies constraints early, explains the commercial implications, and recommends the most suitable route forward.</p>
+  </div>
+  <div class="proposition-right">
+    <div class="value-gap-box">
+      <div class="value-gap-title">The intelligence gap</div>
+      <div class="value-gap-text">"The real issue is uncertainty. Not weak land — just a position that has never been properly read."</div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+      <div style="padding: 1.5rem; border: 1px solid var(--cream);">
+        <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm-light); margin-bottom: 0.75rem;">Without assessment</div>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li style="font-size: 0.82rem; color: var(--warm-mid); font-weight: 300;">Buyers discount heavily</li>
+          <li style="font-size: 0.82rem; color: var(--warm-mid); font-weight: 300;">Transactions stall</li>
+          <li style="font-size: 0.82rem; color: var(--warm-mid); font-weight: 300;">Risk stays with owner</li>
+          <li style="font-size: 0.82rem; color: var(--warm-mid); font-weight: 300;">Value unrealised</li>
+        </ul>
+      </div>
+      <div style="padding: 1.5rem; border: 1px solid var(--forest); position: relative;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--forest);"></div>
+        <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--forest); margin-bottom: 0.75rem;">With TerraVia</div>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li style="font-size: 0.82rem; color: var(--charcoal); font-weight: 300;">Uncertainty reduced</li>
+          <li style="font-size: 0.82rem; color: var(--charcoal); font-weight: 300;">Strongest route identified</li>
+          <li style="font-size: 0.82rem; color: var(--charcoal); font-weight: 300;">Informed decisions made</li>
+          <li style="font-size: 0.82rem; color: var(--charcoal); font-weight: 300;">Real value realised</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROUTES -->
+<section class="routes reveal" id="routes">
+  <div class="routes-header">
+    <div>
+      <div class="section-label" style="color: var(--sage);">How we work</div>
+      <h2>There is no single route</h2>
+    </div>
+    <p>The right path depends on planning complexity, seller appetite, timeline pressures, likely planning outcomes, buyer demand, and risk profile. We determine the most intelligent route for that specific opportunity.</p>
+  </div>
+
+  <div class="routes-grid">
+    <div class="route-card">
+      <div class="route-number">01</div>
+      <div class="route-name">Route 1</div>
+      <div class="route-title">Planning & Harvest Partnership</div>
+      <div class="route-desc">Collaborative planning and value enhancement. We fund and coordinate surveys, planning analysis, and architectural studies upfront to bring land to market in its strongest possible position.</div>
+      <div class="route-tags">
+        <span class="route-tag">PIP strategy</span>
+        <span class="route-tag">Licensing</span>
+        <span class="route-tag">Upfront funding</span>
+      </div>
+    </div>
+
+    <div class="route-card">
+      <div class="route-number">02</div>
+      <div class="route-name">Route 2</div>
+      <div class="route-title">Conditional Acquisition</div>
+      <div class="route-desc">A direct offer subject to planning approval. Provides greater certainty and a cleaner transaction structure. TerraVia assumes the planning risk directly, reducing the owner's involvement.</div>
+      <div class="route-tags">
+        <span class="route-tag">Certainty</span>
+        <span class="route-tag">Clean structure</span>
+        <span class="route-tag">Risk transfer</span>
+      </div>
+    </div>
+
+    <div class="route-card">
+      <div class="route-number">03</div>
+      <div class="route-name">Route 3</div>
+      <div class="route-title">Open Market or Legalisation</div>
+      <div class="route-desc">Sometimes the most intelligent outcome is a conventional sale, a legalisation strategy, or a direct buyer introduction. The philosophy is flexibility, not formula.</div>
+      <div class="route-tags">
+        <span class="route-tag">Legalisation</span>
+        <span class="route-tag">Direct sale</span>
+        <span class="route-tag">Lotamento</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process reveal" id="process">
+  <div class="process-header">
+    <div>
+      <div class="section-label">How assessment works</div>
+      <h2>Six stages.<br>One clear outcome.</h2>
+    </div>
+    <p>We do not start with a solution. We start by listening. Every decision — which consultants, which application type, which timing — follows from genuine understanding of the site, the owner's objectives, and the real planning conditions.</p>
+  </div>
+
+  <div class="process-steps">
+    <div class="process-step active">
+      <div class="step-dot"></div>
+      <div class="step-num">01</div>
+      <div class="step-name">Listen</div>
+      <div class="step-desc">Understand ownership structure, objectives, risk appetite, desired outcome, and timescale constraints.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-dot"></div>
+      <div class="step-num">02</div>
+      <div class="step-name">Investigate</div>
+      <div class="step-desc">Review PDM, urban/rustic status, ICNF, heritage, topography, access, utilities, and precedent.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-dot"></div>
+      <div class="step-num">03</div>
+      <div class="step-name">Strategise</div>
+      <div class="step-desc">Compare possible routes. Recommend the strongest planning and commercial path with clear reasoning.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-dot"></div>
+      <div class="step-num">04</div>
+      <div class="step-name">Assemble</div>
+      <div class="step-desc">Coordinate architects, surveyors, engineers, environmental consultants, and commercial advisors.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-dot"></div>
+      <div class="step-num">05</div>
+      <div class="step-name">Submit</div>
+      <div class="step-desc">Prepare and manage applications, Câmara meetings, authority communication, and revisions.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-dot"></div>
+      <div class="step-num">06</div>
+      <div class="step-name">Resolve</div>
+      <div class="step-desc">Guide through planning outcome, sale, development, holding strategy, or partnership decision.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CASE STUDY -->
+<section class="case-study" id="case">
+  <div class="case-left">
+    <div class="case-map"></div>
+    <div class="case-left-content">
+      <div class="case-tag">Case Study</div>
+      <h2>Sintra municipality.<br><em>Rustic land,</em><br>unclear status.</h2>
+    </div>
+    <div class="case-meta">
+      <div class="case-meta-item">
+        <div class="case-meta-label">Municipality</div>
+        <div class="case-meta-value">Sintra, Lisboa</div>
+      </div>
+      <div class="case-meta-item">
+        <div class="case-meta-label">Site area</div>
+        <div class="case-meta-value">Approx. 2.4 ha</div>
+      </div>
+      <div class="case-meta-item">
+        <div class="case-meta-label">PDM status</div>
+        <div class="case-meta-value">Mixed / Banzão</div>
+      </div>
+      <div class="case-meta-item">
+        <div class="case-meta-label">Route selected</div>
+        <div class="case-meta-value">Planning & Harvest</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-right">
+    <div class="section-label">Constraints identified</div>
+    <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; color: var(--charcoal); margin-bottom: 2rem; line-height: 1.4;">
+      Eight constraints assessed before any recommendation was made.
+    </h3>
+
+    <div class="case-constraint">
+      <div class="constraint-indicator risk"></div>
+      <div>
+        <div class="constraint-label">Critical</div>
+        <div class="constraint-text">ICNF protected boundary within 50m of proposed buildable area</div>
+      </div>
+    </div>
+    <div class="case-constraint">
+      <div class="constraint-indicator note"></div>
+      <div>
+        <div class="constraint-label">Requires navigation</div>
+        <div class="constraint-text">Mixed rustic/urban classification requires lotamento precedent review</div>
+      </div>
+    </div>
+    <div class="case-constraint">
+      <div class="constraint-indicator note"></div>
+      <div>
+        <div class="constraint-label">Infrastructure</div>
+        <div class="constraint-text">Water connection requires municipal upgrade — costed before submission</div>
+      </div>
+    </div>
+    <div class="case-constraint">
+      <div class="constraint-indicator ok"></div>
+      <div>
+        <div class="constraint-label">Positive</div>
+        <div class="constraint-text">Strong solar orientation and access precedent from adjacent approved plots</div>
+      </div>
+    </div>
+
+    <div class="case-cta">
+      <a href="#case" class="btn-primary" style="background: var(--forest); color: var(--limestone);">Review this example</a>
+      <a href="#contact" class="btn-ghost" style="color: var(--warm-mid);">Discuss a similar site</a>
+    </div>
+  </div>
+</section>
+
+<!-- INSIGHTS -->
+<section class="insights reveal" id="insights">
+  <div class="insights-header">
+    <div>
+      <div class="section-label">Planning intelligence</div>
+      <h2>Understanding the Portuguese planning system</h2>
+    </div>
+    <a href="#contact" class="insights-link">Ask about planning</a>
+  </div>
+
+  <div class="insights-grid">
+    <a href="#contact" class="insight-card">
+      <div class="insight-topic">PDM & Classification</div>
+      <div class="insight-title">Urban land vs rustic land: what landowners in Portugal need to know</div>
+      <div class="insight-desc">The urban/rustic classification determines almost everything about what is possible with a site. Understanding it before spending money on surveys or design is essential.</div>
+    </a>
+    <a href="#contact" class="insight-card">
+      <div class="insight-topic">Planning Process</div>
+      <div class="insight-title">What is a PIP in Portugal, and when should you use one?</div>
+      <div class="insight-desc">A Pedido de Informação Prévia is not a planning application. It is a diagnostic tool — and often the most intelligent first step for uncertain sites.</div>
+    </a>
+    <a href="#contact" class="insight-card">
+      <div class="insight-topic">Sintra Region</div>
+      <div class="insight-title">How Sintra's landscape, heritage, and protected areas affect development potential</div>
+      <div class="insight-desc">ICNF, heritage designations, and Sintra-Cascais Natural Park classifications create a layered constraint environment that requires specific local knowledge to navigate.</div>
+    </a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-band reveal" id="contact">
+  <div>
+    <div class="section-label" style="color: var(--sage);">Get started</div>
+    <h2>Tell us about<br>your land</h2>
+    <p>The first conversation costs nothing. We will give you an honest assessment of what we think is realistically possible — and what the most intelligent next step would be.</p>
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <div style="display: flex; align-items: flex-start; gap: 1rem;">
+        <div style="width: 1px; height: 3rem; background: var(--forest-light); margin-top: 0.25rem;"></div>
+        <div>
+          <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sage); margin-bottom: 0.35rem;">Based in</div>
+          <div style="font-size: 0.9rem; color: var(--limestone); font-weight: 300;">Sintra municipality, Portugal</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: 1rem;">
+        <div style="width: 1px; height: 3rem; background: var(--forest-light); margin-top: 0.25rem;"></div>
+        <div>
+          <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sage); margin-bottom: 0.35rem;">Initial consultation</div>
+          <div style="font-size: 0.9rem; color: var(--limestone); font-weight: 300;">No obligation. No cost. Honest assessment.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-form">
+    <form id="contact-form" action="mailto:hello@terravia.pt" method="post" enctype="text/plain">
+    <div class="form-grid">
+      <label class="sr-only" for="name">Name</label>
+      <input class="form-field" id="name" name="name" type="text" placeholder="Name" autocomplete="name" required>
+      <label class="sr-only" for="email">Email</label>
+      <input class="form-field" id="email" name="email" type="email" placeholder="Email" autocomplete="email" required>
+    </div>
+    <div class="form-row">
+      <label class="sr-only" for="location">Municipality or location of land</label>
+      <input class="form-field" id="location" name="location" type="text" placeholder="Municipality / location of land" autocomplete="address-level2" required>
+    </div>
+    <div class="form-row">
+      <label class="sr-only" for="property-type">Type of land or property</label>
+      <select class="form-field" id="property-type" name="property_type" required>
+        <option value="" disabled selected>Type of land or property</option>
+        <option>Rustic land</option>
+        <option>Urban plot</option>
+        <option>Existing structure requiring legalisation</option>
+        <option>Mixed classification site</option>
+        <option>Quinta or agricultural property</option>
+        <option>Not sure</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="sr-only" for="goal">What are you hoping to achieve?</label>
+      <select class="form-field" id="goal" name="goal" required>
+        <option value="" disabled selected>What are you hoping to achieve?</option>
+        <option>Sell the land at best value</option>
+        <option>Understand what planning is possible</option>
+        <option>Legalise existing structures</option>
+        <option>Find a development or JV partner</option>
+        <option>Understand value before inheriting</option>
+        <option>Something else</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="sr-only" for="message">Anything else we should know about the site?</label>
+      <textarea class="form-field" id="message" name="message" rows="3" placeholder="Anything else we should know about the site?"></textarea>
+    </div>
+    <button class="form-submit" type="submit">Request a consultation →</button>
+    <div class="form-note" id="form-note" aria-live="polite"></div>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand-name">TerraVia</div>
+    <div class="footer-brand-sub">Land Intelligence & Design</div>
+    <div class="footer-tagline">Planning intelligence and design strategy for landowners in Portugal.</div>
+  </div>
+
+  <div>
+    <div class="footer-col-title">Services</div>
+    <ul class="footer-links">
+      <li><a href="#routes">Planning & Harvest Partnership</a></li>
+      <li><a href="#routes">Conditional Acquisition</a></li>
+      <li><a href="#routes">Legalisation Strategy</a></li>
+      <li><a href="#process">Lotamento & Subdivision</a></li>
+      <li><a href="#process">PIP Strategy</a></li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="footer-col-title">Insights</div>
+    <ul class="footer-links">
+      <li><a href="#insights">PDM classifications explained</a></li>
+      <li><a href="#insights">Urban vs rustic land</a></li>
+      <li><a href="#insights">What is a PIP?</a></li>
+      <li><a href="#insights">Sintra planning context</a></li>
+      <li><a href="#routes">Legalisation routes</a></li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="footer-col-title">Company</div>
+    <ul class="footer-links">
+      <li><a href="#proposition">About</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#case">Case studies</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+
+<div class="footer-bottom">
+  <div class="footer-legal">© 2026 TerraVia Land Intelligence & Design. Sintra, Portugal.</div>
+  <div class="footer-legal">terravia.pt</div>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  const contactForm = document.getElementById('contact-form');
+  const formNote = document.getElementById('form-note');
+  contactForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!contactForm.reportValidity()) { return; }
+
+    const data = new FormData(contactForm);
+    const body = [
+      `Name: ${data.get('name')}`,
+      `Email: ${data.get('email')}`,
+      `Location: ${data.get('location')}`,
+      `Property type: ${data.get('property_type')}`,
+      `Goal: ${data.get('goal')}`,
+      '',
+      data.get('message') || 'No additional message.'
+    ].join('\n');
+
+    const mailto = new URL('mailto:hello@terravia.pt');
+    mailto.searchParams.set('subject', 'TerraVia land assessment request');
+    mailto.searchParams.set('body', body);
+    formNote.textContent = 'Opening your email app with the assessment details.';
+    window.location.href = mailto.toString();
+  });
+
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

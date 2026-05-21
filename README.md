@@ -16,6 +16,10 @@ It must stay separate from the main `verrio.co` website.
   - `https://maps.verrio.co/banzao22/`
   - `https://maps.verrio.co/max/`
   - `https://maps.verrio.co/sintratotal/`
+  - `https://maps.verrio.co/gaiatotal/`
+  - `https://maps.verrio.co/terravia/`
+- Explicit exception requested on 2026-05-21:
+  - `https://terravia.verrio.co/`
 - `https://maps.verrio.co/` itself should stay blank and reveal no public information
 
 ## Current Audit
@@ -72,6 +76,8 @@ The repository is being normalized toward this structure:
   /azenhas
   /banzao22
   /max
+  /gaiatotal
+  /terravia
   /sintratotal
 
 /packages
@@ -116,6 +122,8 @@ Useful local URLs:
 - `http://127.0.0.1:8011/banzao22/`
 - `http://127.0.0.1:8011/max/`
 - `http://127.0.0.1:8011/sintratotal/`
+- `http://127.0.0.1:8011/apps/gaiatotal/`
+- `http://127.0.0.1:8011/apps/terravia/`
 
 Use `scripts/serve_app.py` instead of `python -m http.server` because PMTiles support needs HTTP byte-range handling.
 
@@ -141,6 +149,8 @@ This writes the deployable site to `deploy-root/`, including:
 - `banzao22/`
 - `max/`
 - `sintratotal/`
+- `gaiatotal/`
+- `terravia/`
 - legacy `/app/` redirect shims
 - Cloudflare Pages function bundle files for `/api/aoi`
 

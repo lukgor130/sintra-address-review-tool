@@ -32,6 +32,12 @@ def copy_tree(relative_path: str) -> None:
     shutil.copytree(source, destination, dirs_exist_ok=True)
 
 
+def copy_tree_to(relative_path: str, output_relative_path: str) -> None:
+    source = ROOT / relative_path
+    destination = OUTPUT / output_relative_path
+    shutil.copytree(source, destination, dirs_exist_ok=True)
+
+
 def write_public_source_cache() -> None:
     source_cache = ROOT / "addressreview" / "data" / "source-cache"
     output_cache = OUTPUT / "addressreview" / "data" / "source-cache"
@@ -132,6 +138,8 @@ def main() -> None:
     copy_tree("banzao22")
     copy_tree("max")
     copy_tree("sintratotal")
+    copy_tree_to("apps/gaiatotal", "gaiatotal")
+    copy_tree_to("apps/terravia", "terravia")
     copy_tree("app")
 
     print(f"Wrote deployment bundle to {OUTPUT}")

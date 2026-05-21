@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gaia PDM Parcel Explorer</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231b2726'/%3E%3Cpath d='M7 21.5h18' stroke='%23f2e8d6' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M9 18l5.5-8.5L23 18' fill='none' stroke='%23d18a47' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cpath d='M11 15h8.5' stroke='%2388a65b' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/addressreview/vendor/maplibre-gl.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="gaia-shell">
+      <aside class="control-panel">
+        <header class="panel-header">
+          <p class="eyebrow">Vila Nova de Gaia · Porto</p>
+          <h1>Gaia PDM parcel explorer</h1>
+          <p class="panel-intro">
+            Compare DGT cadastral parcels against Gaia’s PDM qualification layers, perimeter,
+            constraints, and official street toponymy.
+          </p>
+          <div class="header-links">
+            <a href="https://opendata.gaiurb.pt/" target="_blank" rel="noreferrer">Gaia open data</a>
+            <a
+              href="https://ogcapi.dgterritorio.gov.pt/collections/cadastro?f=html"
+              target="_blank"
+              rel="noreferrer"
+              >DGT cadastro</a
+            >
+          </div>
+        </header>
+
+        <section class="summary-strip" id="summary-strip" aria-label="Layer summary">
+          <div class="summary-card">
+            <span>PDM</span>
+            <strong id="pdm-count">Loading</strong>
+          </div>
+          <div class="summary-card">
+            <span>Regime</span>
+            <strong id="parcel-count">Loading</strong>
+          </div>
+          <div class="summary-card">
+            <span>Source CRS</span>
+            <strong>CRS84 / 4326</strong>
+          </div>
+          <div class="summary-card">
+            <span>Mode</span>
+            <strong id="basemap-summary">Map</strong>
+          </div>
+        </section>
+
+        <section class="group-stack" aria-label="Layer controls">
+          <fieldset class="layer-group">
+            <legend>Planning categories</legend>
+            <label class="group-toggle">
+              <input type="checkbox" id="pdm-master-toggle" checked />
+              <span>Show all target designations</span>
+              <span class="state-chip" id="pdm-master-state">On</span>
+            </label>
+            <div class="layer-list" id="pdm-layer-list"></div>
+          </fieldset>
+
+          <fieldset class="layer-group">
+            <legend>Parcel / regime data</legend>
+            <label class="layer-row">
+              <input type="checkbox" id="soil-regime-toggle" checked />
+              <span class="layer-swatch layer-swatch--soil-urban" aria-hidden="true"></span>
+              <span class="layer-copy">
+                <strong>Urban / rústico designation</strong>
+                <span>Cached DGT CRUS vector tiles for Gaia; no viewport fetch.</span>
+              </span>
+              <span class="state-chip" id="soil-regime-state">On</span>
+            </label>
+            <div class="parcel-actions">
+              <button type="button" id="upload-parcels-button">Upload parcel GeoJSON</button>
+              <input id="parcel-upload-input" type="file" accept=".geojson,.json,application/geo+json,application/json" />
+            </div>
+            <p class="helper-copy" id="parcel-helper">
+              Official DGT Cadastro Predial currently exposes no Gaia parcel records through the
+              public API; upload remains available for a private parcel pack.
+            </p>
+          </fieldset>
+
+          <fieldset class="layer-group">
+            <legend>Supporting layers</legend>
+            <label class="layer-row">
+              <input type="checkbox" id="perimeter-toggle" checked />
+              <span class="layer-swatch layer-swatch--perimeter" aria-hidden="true"></span>
+              <span class="layer-copy">
+                <strong>Perímetro Urbano</strong>
+                <span>From Gaia PDM qualification layer</span>
+              </span>
+              <span class="state-chip" id="perimeter-state">On</span>
+            </label>
+            <label class="layer-row">
+              <input type="checkbox" id="constraints-toggle" />
+              <span class="layer-swatch layer-swatch--constraints" aria-hidden="true"></span>
+              <span class="layer-copy">
+                <strong>Servidões e Restrições</strong>
+                <span>Gaia WMS overlay, rendered by source styling</span>
+              </span>
+              <span class="state-chip" id="constraints-state">Off</span>
+            </label>
+            <label class="layer-row">
+              <input type="checkbox" id="toponymy-toggle" />
+              <span class="layer-swatch layer-swatch--toponymy" aria-hidden="true"></span>
+              <span class="layer-copy">
+                <strong>Toponímia</strong>
+                <span>Official Gaia street axes and labels</span>
+              </span>
+              <span class="state-chip" id="toponymy-state">Off</span>
+            </label>
+            <div class="layer-row layer-row--disabled" aria-disabled="true">
+              <span class="layer-swatch layer-swatch--disabled" aria-hidden="true"></span>
+              <span class="layer-copy">
+                <strong>N.º de Polícia</strong>
+                <span>No public Gaia WFS/WMS layer found yet; reserved for a future source.</span>
+              </span>
+              <span class="state-chip">Source needed</span>
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="inspector" aria-labelledby="inspector-title">
+          <div class="section-head">
+            <h2 id="inspector-title">Selection</h2>
+            <span class="state-chip" id="selection-state">None</span>
+          </div>
+          <div id="selection-summary" class="selection-summary">
+            Click a parcel, PDM area, perimeter, or street feature to inspect attributes.
+          </div>
+        </section>
+      </aside>
+
+      <main class="map-panel">
+        <div class="map-toolbar">
+          <div class="toolbar-title">
+            <p class="eyebrow">Live source layers</p>
+            <strong id="map-title">Preparing Gaia workspace</strong>
+            <span class="map-status" id="map-status">Connecting to Gaia and DGT services</span>
+          </div>
+          <div class="toolbar-controls" aria-label="Map controls">
+            <label class="toolbar-toggle">
+              <input type="checkbox" id="parcel-visible-toggle" checked />
+              <span class="toolbar-toggle-ui">
+                <span class="toolbar-toggle-dot" aria-hidden="true"></span>
+                <span>Parcels</span>
+              </span>
+            </label>
+            <div class="segmented-control" role="group" aria-label="Basemap mode">
+              <button type="button" data-basemap-mode="street" aria-pressed="true">Map</button>
+              <button type="button" data-basemap-mode="satellite" aria-pressed="false">
+                Satellite
+              </button>
+            </div>
+          </div>
+          <div class="toolbar-actions">
+            <button type="button" id="fit-gaia-button">Fit Gaia</button>
+            <button type="button" id="fit-visible-button">Fit visible</button>
+            <button type="button" id="clear-selection-button">Clear</button>
+          </div>
+          <div class="legend" aria-label="Layer legend" id="legend"></div>
+        </div>
+        <div id="map"></div>
+      </main>
+    </div>
+
+    <script src="/addressreview/vendor/maplibre-gl.js"></script>
+    <script src="/addressreview/vendor/pmtiles.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

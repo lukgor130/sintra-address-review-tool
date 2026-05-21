@@ -14,6 +14,9 @@
 - `https://maps.verrio.co/banzao22/`
 - `https://maps.verrio.co/max/`
 - `https://maps.verrio.co/sintratotal/`
+- `https://maps.verrio.co/gaiatotal/`
+- `https://maps.verrio.co/terravia/`
+- `https://terravia.verrio.co/`
 
 The root path `/` is intentionally blank and should not be turned into a public landing page.
 The legacy `/app/` path should remain a compatibility redirect only and must not be treated as a primary route.
@@ -30,6 +33,7 @@ The legacy `/app/` path should remain a compatibility redirect only and must not
 - Required for shared AOI notes API: Durable Object namespace binding named `AOI_NOTES`
 - Optional D1 backend: D1 binding named `AOI_DB`; if present, the API uses D1 before falling back to `AOI_NOTES`
 - Required for static assets: Worker Assets binding named `ASSETS`
+- Worker Assets uses `run_worker_first: true` so host-specific routing, including `terravia.verrio.co`, runs before static root asset serving.
 - Local Cloudflare helper variables live in `.env.cloudflare.local`
 - Do not commit secrets or dashboard-only IDs into tracked files unless explicitly intended
 
@@ -51,6 +55,7 @@ If neither `AOI_NOTES` nor `AOI_DB` is available, the app will render but shared
 
 - Only the `maps.verrio.co` record, and only after the user explicitly requests a DNS change
 - Child records beneath the maps namespace, such as `*.maps.verrio.co`, only when they are documented in `/deployments/dns-map.md`
+- `terravia.verrio.co` was added as a dedicated Worker route on 2026-05-21 because the user explicitly requested that public URL for the TerraVia landing page. DNS is a proxied CNAME from `terravia.verrio.co` to `maps.verrio.co`.
 
 ## Forbidden DNS Edits
 
